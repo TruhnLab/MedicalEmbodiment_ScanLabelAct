@@ -12,7 +12,7 @@
   <meta property="og:image" content="assets/media/teaser.jpg">
   <link rel="icon" href="assets/media/lab-logo.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/css/site.css?v=3">
+  <link rel="stylesheet" href="assets/css/site.css?v=4">
   <script type="importmap">
     { "imports": { "three": "./assets/vendor/three/three.module.min.js",
                    "three/addons/controls/OrbitControls.js": "./assets/vendor/three/OrbitControls.js" } }
@@ -236,16 +236,22 @@
         <div class="ask"><p class="bubble"><span class="who">Instruction</span>There is a cup left of the outlet. Please find and approach it.</p></div>
         <div class="float settle"><video src="assets/media/find.mp4" poster="assets/media/find.jpg" controls muted loop playsinline preload="metadata"
              aria-label="The robot drives towards the power outlet, detects the cup on the way and stops in front of it"></video></div>
-        <p class="outcome">The robot drives towards the power outlet, which it knows from the object list, and detects the
-          cup on the way. It stops 0.2&nbsp;m in front of the cup 31&nbsp;s after the instruction. The video runs at
-          twice the speed.</p>
+        <p class="outcome">The model first calls <code>watch_for</code>, which runs YOLOE on the live camera images with
+          the word cup and a few synonyms. It then sends the robot towards the power outlet, a target from the room's
+          object list, with <code>drive_to_object</code>. YOLOE spots the cup on the way, its depth places it in the room,
+          and the drive stops. With <code>approach_found</code> the robot drives up to the cup and stops 0.2&nbsp;m in
+          front of it, 31&nbsp;s after the instruction. The video runs at twice the speed.</p>
       </div>
       <div class="demo" id="demo-pick" role="tabpanel" hidden>
         <div class="ask"><p class="bubble"><span class="who">Instruction</span>I moved it a bit. Please pick it up again.</p></div>
         <div class="float"><video src="assets/media/pick.mp4" poster="assets/media/pick.jpg" controls muted loop playsinline preload="none"
              aria-label="The robot detects a red cube, approaches it, centres the gripper over it and lifts it"></video></div>
-        <p class="outcome">The robot detects the 30&nbsp;mm cube at its new position, centres the gripper over it using the
-          camera on the arm and lifts it 66&nbsp;s after the instruction.</p>
+        <p class="outcome">The model calls <code>watch_for</code> and <code>search_here</code>. YOLOE finds the cube in the
+          camera images, an image check with Qwen confirms that it is the requested item, and <code>approach_found</code>
+          drives the robot up to it. <code>pick_up_object</code> then steers by the camera on the gripper. Since camera
+          and gripper are rigidly connected, the gripper is right above the cube when the cube appears at a taught spot
+          in the image. Base and arm move until it sits there, then the arm goes down in guarded steps, closes the
+          gripper and lifts the 30&nbsp;mm cube, 66&nbsp;s after the instruction.</p>
       </div>
     </section>
 
