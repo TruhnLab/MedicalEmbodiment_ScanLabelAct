@@ -6,11 +6,11 @@ A robot that scans a room and then works in it, a first step towards robots that
 
 **Dennis Eschweiler** &nbsp;·&nbsp; **Daniel Truhn**
 
-[Lab for Artificial Intelligence in Medicine](https://truhn.ai/),
-[Department of Diagnostic and Interventional Radiology](https://www.ukaachen.de/kliniken-institute/klinik-fuer-diagnostische-und-interventionelle-radiologie/klinik/),
+Lab for Artificial Intelligence in Medicine,
+Department of Diagnostic and Interventional Radiology,
 University Hospital RWTH Aachen
 
-**[Project page](https://truhnlab.github.io/MedicalEmbodiment_ScanLabelAct/)**
+### [Project page](https://truhnlab.github.io/MedicalEmbodiment_ScanLabelAct/)
 
 </div>
 
