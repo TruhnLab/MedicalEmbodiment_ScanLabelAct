@@ -14,4 +14,6 @@ console/vendor/
 # local only, not in the public repository (user, 2026-10-14): notes for the coding agents, Hiwonder's URDF
 CLAUDE.md
 projects/*/BRIEF.md
+# each project's working notes (incidents, experiments, tuning, test logs); the README is the public part
+projects/*/JOURNAL.md
 config/landerpi.urdf

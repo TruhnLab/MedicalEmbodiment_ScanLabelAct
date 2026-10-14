@@ -51,7 +51,7 @@ config/              calibration
 docs/                operating the robot
 ```
 
-Each folder in `projects/` has a README with the details, measurements and known weaknesses.
+Each folder in `projects/` has a README: how to use it, how it works, results and known limits.
 
 ## Getting started
 
