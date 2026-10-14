@@ -1,4 +1,18 @@
-# LanderPi: a small mobile manipulator that scans a room and then works in it
+<div align="center">
+
+# Scan, Label, Act
+
+A robot that scans a room and then works in it, a first step towards robots that assist medical staff
+
+**Dennis Eschweiler** &nbsp;·&nbsp; **Daniel Truhn**
+
+[Lab for Artificial Intelligence in Medicine](https://truhn.ai/),
+[Department of Diagnostic and Interventional Radiology](https://www.ukaachen.de/kliniken-institute/klinik-fuer-diagnostische-und-interventionelle-radiologie/klinik/),
+University Hospital RWTH Aachen
+
+**[Project page](https://truhnlab.github.io/MedicalEmbodiment_ScanLabelAct/)**
+
+</div>
 
 A [Hiwonder LanderPi](https://www.hiwonder.com/) explores a room by itself. From the recording, a laptop builds a
 2D map, a 3D mesh and a list of the objects in the room. That labelled room then serves as the robot's model of the
