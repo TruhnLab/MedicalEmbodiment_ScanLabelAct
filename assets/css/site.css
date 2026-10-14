@@ -272,24 +272,35 @@ a.step:hover { text-decoration: none; transform: translateY(-4px); box-shadow: v
 @media (max-width: 540px) { .steps { grid-template-columns: 1fr; } }
 
 /* ---------- exploration runs: one room at a time ---------- */
-.runview { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(240px, 1fr); min-height: 420px; }
-.runview .map { display: grid; place-items: center; padding: 22px; background: #fbfcfe; border-right: 1px solid var(--line); }
-.runview .map svg { width: 100%; height: 100%; max-height: 460px; }
+.runview { --seen: #22c55e; --todo: #f59e0b; --gave: #8792a6;
+  display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(250px, 1fr); }
+.runview .map { display: flex; flex-direction: column; gap: 12px; height: 540px; padding: 18px 20px 16px; background: #fbfcfe; border-right: 1px solid var(--line); }
+.runview canvas { flex: 1; min-height: 0; width: 100%; }
+.player { display: flex; align-items: center; gap: 12px; }
+.player .play { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 50%; cursor: pointer;
+  color: #fff; background: var(--accent); box-shadow: 0 6px 14px -6px rgba(47, 107, 255, .7); }
+.player .play svg { width: 14px; height: 14px; fill: currentColor; }
+.player .play .i-pause, .player .play.on .i-play { display: none; }
+.player .play.on .i-pause { display: inline; }
+.player input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.player span { flex: none; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.player span em { font-style: normal; }
+@media (max-width: 480px) { .player span em { display: none; } }
 .runview .side { padding: 26px 28px; display: flex; flex-direction: column; gap: 14px; }
 .runview h3 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
 .runview h3 small { display: block; font-size: 14px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-top: 2px; }
 .runview dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 9px 18px; font-size: 15px; }
 .runview dt { color: var(--muted); }
 .runview dd { margin: 0; font-weight: 620; font-variant-numeric: tabular-nums; text-align: right; }
-.runview .btn { align-self: flex-start; margin-top: auto; }
-.trail { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; }
-.start { fill: #fff; stroke: var(--accent); }
-.end { fill: var(--robot); }
-.runview .end { opacity: 0; transition: opacity .4s; }
-.runview.drawn .end { opacity: 1; }
+.runview .legend { list-style: none; margin: auto 0 0; padding: 14px 0 0; border-top: 1px solid var(--line); display: grid; gap: 7px; font-size: 13.5px; color: var(--ink-2); }
+.runview .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 9px; vertical-align: -1px; }
+.runview .legend .seen { background: var(--seen); }
+.runview .legend .todo { background: var(--todo); }
+.runview .legend .gave { background: var(--gave); }
+.runview .legend .path { height: 3px; vertical-align: 3px; border-radius: 2px; background: var(--accent); }
 @media (max-width: 720px) {
   .runview { grid-template-columns: 1fr; }
-  .runview .map { border-right: 0; border-bottom: 1px solid var(--line); min-height: 280px; }
+  .runview .map { height: 400px; padding: 14px; border-right: 0; border-bottom: 1px solid var(--line); }
 }
 
 .robot-photo { display: grid; grid-template-columns: 220px 1fr; gap: 32px; align-items: center; }

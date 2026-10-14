@@ -121,18 +121,33 @@
     <section id="runs" class="wide">
       <div class="head center narrow reveal">
         <h2>Exploration runs</h2>
-        <p class="lead">For each of the three rooms we scanned, the best run is shown with its lidar occupancy map and
-          the path driven.</p>
+        <p class="lead">For each of the three rooms we scanned, the best run is replayed with its lidar map, the path
+          driven and the surfaces its camera had to see. The robot keeps exploring until every reachable surface has
+          been seen or given up after two tries.</p>
       </div>
       <div class="tabs reveal">
         <div class="seg" role="tablist" aria-label="Rooms" id="runTabs"><span class="pill" aria-hidden="true"></span></div>
       </div>
       <div class="float runview settle" id="runView">
-        <div class="map" id="runMap"></div>
+        <div class="map">
+          <canvas id="runCanvas" role="img" aria-label="Replay of the run with the map, the path driven and the surfaces the camera has seen"></canvas>
+          <div class="player">
+            <button type="button" class="play" id="runPlay" aria-label="Play">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path class="i-play" d="M4 2.5v11l9-5.5z"/><path class="i-pause" d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg>
+            </button>
+            <input type="range" id="runTime" min="0" max="1000" value="0" aria-label="Time in the run">
+            <span id="runClock"></span>
+          </div>
+        </div>
         <div class="side">
           <h3 id="runTitle"></h3>
           <dl id="runStats"></dl>
-          <button type="button" class="btn small" id="runReplay">Replay the path</button>
+          <ul class="legend" aria-label="Legend">
+            <li><i class="seen"></i>Seen by the camera</li>
+            <li><i class="todo"></i>Not seen yet</li>
+            <li><i class="gave"></i>Given up after two tries</li>
+            <li><i class="path"></i>Path driven</li>
+          </ul>
         </div>
       </div>
       <p class="note center reveal" id="runTotals"></p>
