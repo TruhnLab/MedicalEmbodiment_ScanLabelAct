@@ -3,7 +3,6 @@
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---------- reveal on scroll ----------
 const revealer = new IntersectionObserver((entries) => {
@@ -82,6 +81,7 @@ if (tabs) {
 // pixel per map cell whose R, G and B are the moments (1-255 over the run, 0 = never) the cell became a surface
 // to look at, was seen by the camera, and was given up. The explorer's own coverage figure comes as a series.
 const REPLAY_S = 16;  // every run is replayed in this many seconds
+const HOLD_S = 4;     // and its final state is shown this long before it starts again
 const COV = { seen: [34, 197, 94, 150], todo: [245, 158, 11, 175], gave: [135, 146, 166, 190] };
 
 const fmtDate = (s) => new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8))
@@ -91,8 +91,9 @@ const loadImage = (src) => new Promise((ok, fail) => { const i = new Image(); i.
 
 function runPlayer(view) {
   const canvas = $('#runCanvas', view), ctx = canvas.getContext('2d');
-  const play = $('#runPlay', view), slider = $('#runTime', view), clock = $('#runClock', view);
+  const clock = $('#runClock', view);
   let run = null, map = null, cov = null, t = 0, playing = false, last = 0, drawnCode = -1, liveStat = null;
+  let paused = false, visible = false, restart = null;
 
   async function load(r) {
     const [img, covImg] = await Promise.all([loadImage(`assets/data/runs/${r.session}.png`),
@@ -171,7 +172,6 @@ function runPlayer(view) {
     ctx.strokeStyle = '#fff';
     ctx.beginPath(); ctx.arc(X(x), Y(y), 6 * dpr, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
 
-    slider.value = String(Math.round((1000 * t) / run.seconds));
     clock.innerHTML = `${mmss(t)} / ${mmss(run.seconds)}<em> · ×${Math.round(run.seconds / REPLAY_S)}</em>`;
     if (liveStat && run.coverage_series?.length) {
       let c = 0;
@@ -185,33 +185,46 @@ function runPlayer(view) {
     t = Math.min(run.seconds, t + ((now - last) / 1000) * (run.seconds / REPLAY_S));
     last = now;
     draw();
-    if (t >= run.seconds) setPlaying(false);
-    else requestAnimationFrame(frame);
+    if (t < run.seconds) { requestAnimationFrame(frame); return; }
+    // at the end: hold the final state, then start again
+    setPlaying(false);
+    clearTimeout(restart);
+    restart = setTimeout(() => { t = 0; setPlaying(true); }, HOLD_S * 1000);
   }
+  // plays only while the viewer is in sight and not paused by a click
   function setPlaying(on) {
-    playing = on && !!run;
-    play.classList.toggle('on', playing);
-    play.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    playing = on && !!run && visible && !paused;
     if (playing) {
       if (t >= run.seconds) t = 0;
       last = performance.now();
       requestAnimationFrame(frame);
     }
   }
-  play.addEventListener('click', () => setPlaying(!playing));
-  slider.addEventListener('input', () => { if (run) { t = (+slider.value / 1000) * run.seconds; draw(); } });
+  canvas.parentElement.addEventListener('click', () => {
+    paused = !paused;
+    clearTimeout(restart);
+    setPlaying(!paused);
+  });
+  new IntersectionObserver((entries) => {
+    visible = entries[0].isIntersecting;
+    if (!visible) clearTimeout(restart);
+    setPlaying(visible && t < run?.seconds);
+    if (visible && run && t >= run.seconds) restart = setTimeout(() => { t = 0; setPlaying(true); }, 1000);
+  }, { threshold: 0.45 }).observe(view);
   new ResizeObserver(() => draw()).observe(canvas);
 
   return {
-    async show(r, stat, autoplay) {
-      setPlaying(false);
+    // a room from the start
+    async show(r, stat) {
+      clearTimeout(restart);
+      playing = false;
       await load(r);
       liveStat = stat;
-      t = autoplay ? 0 : r.seconds;
+      t = 0;
+      paused = false;
       draw();
-      if (autoplay) setPlaying(true);
+      setPlaying(true);
     },
-    start() { t = 0; setPlaying(true); },
   };
 }
 
@@ -220,7 +233,6 @@ async function runSection() {
   if (!tabs || !view) return;
   const { totals, runs } = await fetch('assets/data/runs.json').then((r) => r.json());
   const player = runPlayer(view);
-  let seen = false;
 
   function show(r, btn) {
     press(tabs, btn);
@@ -234,7 +246,7 @@ async function runSection() {
       r.objects ? ['Labelled objects', r.objects] : null,
     ].filter(Boolean);
     $('#runStats').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
-    return player.show(r, $('#runLive'), seen && !calm);
+    return player.show(r, $('#runLive'));
   }
 
   for (const r of runs) {
@@ -253,13 +265,6 @@ async function runSection() {
   later.title = 'Further rooms will be added';
   tabs.append(later);
   await show(runs[0], $('button', tabs));
-  // the first replay starts when the viewer comes into sight
-  new IntersectionObserver((entries, obs) => {
-    if (!entries[0].isIntersecting) return;
-    seen = true;
-    if (!calm) player.start();
-    obs.disconnect();
-  }, { threshold: 0.45 }).observe(view);
 
   $('#runTotals').textContent = `Across all recordings, ${totals.recordings} runs in ${totals.rooms} rooms on ${totals.days} days, `
     + `with ${totals.minutes} minutes and ${totals.path_m} m of driving.`;
@@ -274,7 +279,7 @@ if (roomHost) {
     if (!entries.some((e) => e.isIntersecting)) return;
     near.disconnect();
     try {
-      const { initRoom } = await import('./room3d.js');
+      const { initRoom } = await import('./room3d.js?v=3');
       await initRoom(roomHost);
     } catch (err) {
       console.error(err);

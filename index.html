@@ -12,7 +12,7 @@
   <meta property="og:image" content="assets/media/teaser.jpg">
   <link rel="icon" href="assets/media/lab-logo.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/css/site.css">
+  <link rel="stylesheet" href="assets/css/site.css?v=3">
   <script type="importmap">
     { "imports": { "three": "./assets/vendor/three/three.module.min.js",
                    "three/addons/controls/OrbitControls.js": "./assets/vendor/three/OrbitControls.js" } }
@@ -30,6 +30,7 @@
         <a class="link" href="#method">Method</a>
         <a class="link" href="#runs">Runs</a>
         <a class="link" href="#reconstruction">Reconstruction</a>
+        <a class="link" href="#localization">Localization</a>
         <a class="link" href="#tasks">Tasks</a>
         <a class="btn small" href="https://github.com/TruhnLab/MedicalEmbodiment_ScanLabelAct">
           <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
@@ -95,11 +96,11 @@
             vision-language model lists the objects, an open-vocabulary detector locates them, and the detections are
             merged into 3D objects.</p><p class="more">Interactive model ↓</p></div>
         </a>
-        <div class="step reveal" style="--d:.16s">
+        <a class="step reveal" href="#localization" style="--d:.16s">
           <div class="pic"><img src="assets/media/localization.png" alt="Lidar scans of one rotation, the match score over the map, and the resulting pose" loading="lazy" style="object-fit:contain;padding:10px"></div>
           <div class="txt"><h3><span>3</span>Localization</h3><p>In a known room, the lidar scans of one rotation in place
-            are matched against the stored map.</p></div>
-        </div>
+            are matched against the stored map.</p><p class="more">Example ↓</p></div>
+        </a>
         <a class="step reveal" href="#tasks" style="--d:.24s">
           <div class="pic tools" aria-label="Some of the tools available to the vision-language model">
             <span class="hot">drive_to_object</span><span>turn_to_object</span><span>look_at</span>
@@ -121,9 +122,11 @@
     <section id="runs" class="wide">
       <div class="head center narrow reveal">
         <h2>Exploration runs</h2>
-        <p class="lead">For each of the three rooms we scanned, the best run is replayed with its lidar map, the path
-          driven and the surfaces its camera had to see. The robot keeps exploring until every reachable surface has
-          been seen or given up after two tries.</p>
+        <p class="explain">The robot explores an unknown room on its own while a 2D map is built from its lidar. A
+          live model of what the depth camera has seen marks the surfaces of floor, walls and furniture that are still
+          missing, and the robot drives to viewpoints for them along the shortest route. It stops when no unexplored
+          area is left and every reachable surface has been seen or given up after two visits. Below, the best run in
+          each of the three rooms we scanned is replayed with its map, the path driven and these surfaces.</p>
       </div>
       <div class="tabs reveal">
         <div class="seg" role="tablist" aria-label="Rooms" id="runTabs"><span class="pill" aria-hidden="true"></span></div>
@@ -131,13 +134,7 @@
       <div class="float runview settle" id="runView">
         <div class="map">
           <canvas id="runCanvas" role="img" aria-label="Replay of the run with the map, the path driven and the surfaces the camera has seen"></canvas>
-          <div class="player">
-            <button type="button" class="play" id="runPlay" aria-label="Play">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path class="i-play" d="M4 2.5v11l9-5.5z"/><path class="i-pause" d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg>
-            </button>
-            <input type="range" id="runTime" min="0" max="1000" value="0" aria-label="Time in the run">
-            <span id="runClock"></span>
-          </div>
+          <span class="runclock" id="runClock"></span>
         </div>
         <div class="side">
           <h3 id="runTitle"></h3>
@@ -157,8 +154,11 @@
     <section id="reconstruction" class="wide">
       <div class="head center narrow reveal">
         <h2>Labelled 3D reconstruction</h2>
-        <p class="lead">Reconstruction of a kitchen from one autonomous run, with the objects found by the labelling
-          pipeline. Drag to rotate the model and select an object to see its label and description.</p>
+        <p class="explain">After the run, the recorded colour and depth images are fused into a 3D mesh of the room,
+          each image placed by the robot's position and the pose of its arm. The labelling then finds the objects in
+          this mesh. Qwen lists what the room contains, YOLOE finds these objects in the images, and Qwen checks and
+          names the resulting 3D objects, as detailed below the model. The kitchen shown here comes from one
+          autonomous run. Drag to rotate the model and select an object to see its label and description.</p>
       </div>
       <div class="float room settle" id="roomView">
         <div class="loading" id="roomLoading">Loading the reconstruction …</div>
@@ -198,12 +198,31 @@
       </div>
     </section>
 
+    <!-- ======================= 3 localization ======================= -->
+    <section id="localization" class="wide">
+      <div class="head center narrow reveal">
+        <h2>Localization</h2>
+        <p class="explain">Placed in a room it has scanned before, the robot first has to find out where it stands. It
+          turns once on the spot, and the lidar scans of this turn are compared with the stored map at every place
+          the robot could stand. The best match gives its position and heading, and while it drives, every new scan
+          keeps this position up to date.</p>
+      </div>
+      <figure class="float locfig settle">
+        <img src="assets/media/localization.png" alt="Three panels. The lidar scans of one turn on the spot, how well they fit at each place of the map, and the located robot with its scans on the map's walls" loading="lazy" width="1872" height="704">
+      </figure>
+      <p class="note center reveal">Left, the scans of one turn on the spot. Middle, how well they fit at each place of
+        the map. Right, the result, with the scans on the map's walls.</p>
+    </section>
+
     <!-- ======================= 4 tasks ======================= -->
     <section id="tasks" class="wide">
       <div class="head center narrow reveal">
         <h2>Language-instructed tasks</h2>
-        <p class="lead">A vision-language model receives the room's object list and the robot's state and calls
-          navigation, search and grasping skills as tools. All runs are autonomous after the instruction.</p>
+        <p class="explain">A vision-language model receives the instruction together with the room's object list, its
+          walls and the robot's status. It plans the task and calls the robot's skills as tools, such as driving to an
+          object, watching for an item with the live detector, searching an area, or picking up a small object with the
+          camera on the gripper. Each skill reports its result, so the model can decide on the next step. All runs are
+          autonomous after the instruction.</p>
       </div>
       <div class="tabs reveal">
         <div class="seg" role="tablist" aria-label="Demonstrations" id="demoTabs">
@@ -261,6 +280,6 @@
     </div>
   </footer>
 
-  <script type="module" src="assets/js/site.js"></script>
+  <script type="module" src="assets/js/site.js?v=3"></script>
 </body>
 </html>
