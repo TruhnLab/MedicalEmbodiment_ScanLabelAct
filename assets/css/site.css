@@ -8,6 +8,7 @@
 
 :root {
   --bg: #f1f3f7;
+  --band: #e9ecf2;    /* the overview band and the footer, slightly darker than the page */
   --card: #ffffff;
   --ink: #0e1626;
   --ink-2: #2c3648;
@@ -159,6 +160,10 @@ h2 { font-size: clamp(30px, 4.4vw, 48px); line-height: 1.08; letter-spacing: -.0
 /* abstract */
 .abstract { padding-top: 64px; }
 .abstract + section { padding-top: 72px; }
+/* the overview (abstract and method) on a slightly darker band, the examples below on the page's grey */
+.band { margin-top: 64px; padding: 0 0 80px; background: var(--band);
+  border-top: 1px solid rgba(14, 22, 38, .05); border-bottom: 1px solid rgba(14, 22, 38, .05); }
+.band > .abstract { padding-top: 64px; }
 h2.small { font-size: 22px; letter-spacing: -.01em; margin: 0 0 10px; text-align: center; }
 /* justified, but without automatic hyphenation (user, 2026-10-14); ragged on phones, where justified lines gape */
 .abstract .narrow p { margin: 0; font-size: 17.5px; line-height: 1.7; color: var(--ink-2); text-align: justify; hyphens: manual; }
@@ -312,7 +317,7 @@ a.step:hover { text-decoration: none; transform: translateY(-4px); box-shadow: v
 @media (max-width: 640px) { .robot-photo { grid-template-columns: 1fr; } .robot-photo .float { max-width: 260px; margin: 0 auto; } }
 
 /* ---------- footer ---------- */
-footer { margin-top: 96px; padding: 34px 0 48px; border-top: 1px solid rgba(14, 22, 38, .07); font-size: 14px; color: var(--muted); }
+footer { margin-top: 96px; padding: 34px 0 48px; border-top: 1px solid rgba(14, 22, 38, .05); font-size: 14px; color: var(--muted); background: var(--band); }
 footer .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 48px; }
 @media (max-width: 760px) { footer .cols { grid-template-columns: 1fr; } }
 footer p { margin: 0 0 6px; }
