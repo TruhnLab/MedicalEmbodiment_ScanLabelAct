@@ -1,4 +1,4 @@
-// The labelled room in 3D: the robot's mesh of the kitchen (assets/data/room.bin, made by tools/export_room.py)
+// The labelled room in 3D: the robot's mesh of the kitchen (assets/data/room.bin, a decimated copy of the reconstruction)
 // in its photo colours, or with every named object in its own colour, an upright box and a tag. Click an object
 // (or its tag) for its name and description; click empty space to go back to all objects.
 
@@ -13,7 +13,7 @@ function objectColour(id) {
 }
 const srgbToLinear = (c) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 
-// base: the site's root as seen from the page (tools/capture.html loads it from one folder down)
+// base: the site's root as seen from the page that loads this module
 export async function initRoom(host, { capture = false, base = '' } = {}) {
   const [meta, buf] = await Promise.all([
     fetch(`${base}assets/data/room.json`).then((r) => r.json()),
@@ -237,7 +237,7 @@ export async function initRoom(host, { capture = false, base = '' } = {}) {
   $('#roomLoading', host)?.remove();
   requestAnimationFrame(frame);
 
-  // for tools/capture_orbit.mjs: a fixed view and blend, drawn on request
+  // capture mode (recording the teaser's orbit): a fixed view and blend, drawn on request
   const api = {
     objects: objects.length,
     view(azimuth, elevation, distFactor, m) {
