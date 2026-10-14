@@ -1,0 +1,27 @@
+{
+ "description": "rotation applied in the robot base frame to the camera pose in the survey pose (projects/mapping/camera_calibration.py)",
+ "session": "20261002_093720",
+ "roll_deg": -2.324,
+ "pitch_deg": 2.782,
+ "base_to_depth_rotation": [
+  [
+   0.000734,
+   -0.006553,
+   0.999978
+  ],
+  [
+   -1.0,
+   -8.2e-05,
+   0.000733
+  ],
+  [
+   7.8e-05,
+   -0.999979,
+   -0.006553
+  ]
+ ],
+ "pan_deg_before": {
+  "session": "20261002_093700",
+  "pan_deg": -7.15
+ }
+}

@@ -1,0 +1,120 @@
+/* Task console (tasks.html): the mapping console's dashboard (style.css, map_view.css) with the 3D room
+   in the big card, the camera as a picture-in-picture (M swaps them) and a chat card on the right. */
+
+.tasks-dash {
+  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-rows: 190px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "cam   lidar"
+    "cam   chat"
+    "cam   arm"
+    "strip arm";
+}
+.tasks-dash .camera { position: relative; }
+.tasks-dash .view3d { display: block; }
+
+/* camera: small in a corner of the room view; big (room hidden) after M or a click on it */
+.tasks-dash .cam-view {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  width: 26%;
+  min-width: 200px;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  z-index: 5;
+}
+.tasks-dash .cam-view .cam-overlay, .tasks-dash .cam-view .banner { display: none; }
+body.task-camera .tasks-dash .view3d { display: none; }
+body.task-camera .tasks-dash .cam-view {
+  inset: 0; width: 100%; height: 100%; aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; cursor: default;
+}
+body.task-camera .tasks-dash .cam-view .cam-overlay { display: flex; }
+body.task-camera .tasks-dash .cam-view .banner:not([hidden]) { display: block; }
+
+/* the room's info box goes to the top left (the camera has the bottom left) */
+.task-info { top: 52px; bottom: auto; max-width: min(520px, 55%); }
+.nav-message { margin-top: 4px; color: #c9ced6; }
+.nav-message:empty, .nav-pose:empty { display: none; }
+.nav-message.warn { color: var(--warn); }
+.nav-pose { margin-top: 2px; font-family: var(--mono); font-size: 11px; color: #9aa0ab; }
+.nav-live { margin-top: 4px; color: #fcd34d; }
+/* recorded runs (taskrun.py) */
+.runs-dialog { padding: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text);
+  width: min(900px, 94vw); max-height: 88vh; }
+.runs-dialog video { display: block; width: 100%; max-height: 50vh; background: #000; }
+.run-list { max-height: 46vh; overflow-y: auto; padding: 8px; display: grid; gap: 6px; }
+.run-row { display: grid; grid-template-columns: 96px 1fr auto; gap: 10px; align-items: center; padding: 6px;
+  border-radius: 8px; background: var(--surface-2); }
+.run-row.playing { outline: 2px solid var(--accent); }
+.run-row img, .run-row .nothumb { width: 96px; height: 60px; object-fit: cover; border-radius: 6px; background: #000; }
+.run-row .what { font-size: 12px; min-width: 0; }
+.run-row .what b { font-weight: 600; }
+.run-row .what div { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.run-row .acts { display: flex; gap: 4px; }
+.run-row .acts button { cursor: pointer; }
+.runs-foot { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
+.det-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.nav-live:empty { display: none; }
+
+.topbar a.btn { text-decoration: none; }
+#roomViewBtn { display: none; cursor: pointer; }
+body.task-camera #roomViewBtn { display: inline-flex; }
+
+.pill[data-state="busy"]::before { background: var(--accent); }
+.pill[data-state="warn"]::before { background: var(--warn); }
+.pill[data-state="error"]::before { background: var(--danger); }
+.icon-chip { display: inline-flex; align-items: center; padding: 4px 8px; }
+.map-toolbar button.chip.delete svg { display: block; }
+
+.go-box { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 6; display: flex;
+  align-items: center; gap: 10px; padding: 6px 8px 6px 6px; border-radius: 12px; max-width: min(560px, 45%); }  /* 45 %: clear of the camera picture */
+.go-box #goNote { color: #c9ced6; }
+body.pin-mode .view3d-host canvas { cursor: crosshair; }
+body.pin-mode .label-tags div { pointer-events: none; }  /* pin mode: a click on a tag selected its object */
+#pinBtn.active { background: #f59e0b; color: #111; border-color: #f59e0b; }
+.map-toolbar button.chip[hidden] { display: none; }  /* map_view.css makes toolbar chips inline-flex */
+.go-box[hidden] { display: none; }
+.go-box .btn { white-space: nowrap; }
+.go-box .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* chat placeholder (text prompts come with T4) */
+.chat { grid-area: chat; display: flex; flex-direction: column; }
+.chat-log { flex: 1; min-height: 60px; overflow-y: auto; padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.chat-msg { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); color: var(--muted); font-size: 12px; max-width: 92%; }
+.chat-msg.user { align-self: flex-end; background: var(--accent-soft); color: var(--text); }
+.chat-msg.bot { color: var(--text); }
+.chat-msg.tool { background: none; padding: 0 4px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.chat-msg.tool.bad { color: var(--warn); }
+.chat-msg.note { align-self: center; background: none; font-size: 11px; }
+/* the way to an answer: notes, tool calls, what the robot does now (tasks.js stepsBox) */
+.chat-steps { align-self: stretch; border-left: 2px solid var(--border); padding: 2px 0 2px 8px; font-size: 11px; color: var(--muted); }
+.chat-steps > summary { cursor: pointer; user-select: none; color: var(--muted); font-size: 11px; list-style: none; }
+.chat-steps > summary::before { content: '▸ '; }
+.chat-steps[open] > summary::before { content: '▾ '; }
+.chat-steps.working > summary { color: var(--text); }
+.chat-steps.working > summary::after { content: ''; display: inline-block; width: 8px; height: 8px; margin-left: 6px;
+  border-radius: 50%; border: 2px solid var(--muted); border-top-color: transparent; animation: chat-spin 0.8s linear infinite; }
+@keyframes chat-spin { to { transform: rotate(360deg); } }
+.chat-steps > .chat-msg { margin-top: 4px; max-width: 100%; }
+.chat-msg.thought { background: none; padding: 0 4px; font-style: italic; color: var(--muted); }
+.chat-msg.live { background: none; padding: 0 4px; color: var(--accent); }
+.chat-form { display: flex; gap: 6px; padding: 10px 12px; }
+.chat-form input { flex: 1; min-width: 0; background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; font: inherit; }
+.chat-form .btn:disabled, .chat-form input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 1000px) {
+  .tasks-dash {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: "cam" "strip" "chat" "lidar" "arm";
+  }
+  .tasks-dash .camera { height: 70vh; }
+}

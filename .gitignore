@@ -1,0 +1,17 @@
+logs/
+__pycache__/
+*.pyc
+data/
+*.bag
+*.db3
+*.mcap
+*.egg-info/
+.env
+# messages between coding agents (agent_board/README.md); local only
+agent_board/
+# the consoles' JS libraries: downloaded by the helper (tools/console_vendor.py), no third-party code in git
+console/vendor/
+# local only, not in the public repository (user, 2026-10-14): notes for the coding agents, Hiwonder's URDF
+CLAUDE.md
+projects/*/BRIEF.md
+config/landerpi.urdf

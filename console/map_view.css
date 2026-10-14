@@ -1,0 +1,195 @@
+/* Map view (projects/mapping) inside the console. Builds on style.css. */
+
+/* view switch in the top bar */
+.segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.segmented button {
+  font: 500 12px var(--font);
+  padding: 5px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.segmented button.active { background: var(--accent); color: #fff; }
+
+/* the camera card holds both views */
+.camera { position: relative; }
+.map-view { display: none; position: absolute; inset: 0; background: var(--surface-2); }
+body.mode-map .map-view { display: block; }
+
+/* in map mode the camera becomes a picture-in-picture (click it to go back) */
+body.mode-map .cam-view {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 30%;
+  min-width: 220px;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  z-index: 5;
+}
+body.mode-map .cam-overlay,
+body.mode-map .banner { display: none; }
+
+#mapCanvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+#mapCanvas:active { cursor: grabbing; }
+.map-placeholder { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); pointer-events: none; }
+
+.map-toolbar { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.map-toolbar .spacer { flex: 1; }
+.map-toolbar button.chip, .map-toolbar label.chip { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.map-toolbar button.chip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; }
+.pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #8a909c; }
+.pill[data-state="ok"]::before { background: var(--ok); }
+
+.map-stats {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 4px 16px;
+  border-radius: 10px;
+  padding: 8px 12px;
+  max-width: calc(70% - 30px);
+}
+.map-stats div { display: flex; flex-direction: column; }
+.map-stats .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa0ab; }
+.map-stats span:not(.k) { font-family: var(--mono); font-size: 13px; }
+.map-stats .hint { grid-column: 1 / -1; font-size: 12px; color: #c9ced6; }
+.map-stats .hint:empty { display: none; }
+#recStatus.rec { color: var(--danger); }
+.map-toolbar button.record { color: #ff8a8a; }
+.map-toolbar button.record.recording { background: var(--danger); color: #fff; border-color: var(--danger); }
+.map-toolbar button.explore.running { background: var(--accent); color: #fff; border-color: var(--accent); }
+.map-toolbar button.explore.paused { color: var(--accent); border-color: var(--accent); }
+.map-toolbar button.drawing { background: var(--danger); color: #fff; border-color: var(--danger); }
+#mapCanvas.drawing { cursor: crosshair; }
+
+/* exploration panel (map_view.js): what the robot does now and next, never overwritten */
+.explore-panel { position: absolute; top: 52px; right: 10px; width: 300px; padding: 10px 12px; border-radius: 10px; font-size: 12px; line-height: 1.45; z-index: 4; }
+.explore-panel[hidden] { display: none; }
+.ep-head { display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; }
+#epTime { font-family: var(--mono); font-weight: 400; color: #9aa0ab; }
+.ep-activity { margin-top: 4px; }
+.ep-next { color: #9aa0ab; }
+.ep-bar { height: 6px; margin: 7px 0 4px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+#epBar { height: 100%; width: 0; background: var(--ok); transition: width 0.4s; }
+.ep-counts { color: #9aa0ab; font-size: 11px; }
+.ep-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 5px; color: #9aa0ab; font-size: 10.5px; }
+.ep-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.ep-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
+.ep-legend i.line { width: 12px; height: 3px; border-radius: 1px; }
+.ep-legend i.dash { width: 12px; height: 0; border-top: 2px dashed var(--text); border-radius: 0; }
+#epHistory { margin-top: 6px; }
+#epHistory summary { cursor: pointer; color: #9aa0ab; font-size: 11px; }
+#epEvents { margin: 4px 0 0; padding-left: 0; list-style: none; max-height: 160px; overflow-y: auto; font-size: 11px; }
+#epEvents li { display: flex; gap: 8px; padding: 1px 0; }
+#epEvents .t { font-family: var(--mono); color: #9aa0ab; flex: none; }
+/* end of a run / recording stopped by itself: stays until dismissed (map_view.js showBanner) */
+.run-banner { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -30%); width: min(440px, 90%); padding: 18px 20px; border-radius: 12px; z-index: 7; text-align: center; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45); }
+.run-banner[hidden] { display: none; }
+.run-banner.ok { border: 2px solid var(--ok); }
+.run-banner.warn { border: 2px solid var(--warn); }
+.rb-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.rb-text { font-size: 13px; line-height: 1.5; }
+.rb-stats { margin-top: 8px; font-family: var(--mono); font-size: 12px; color: #9aa0ab; }
+.rb-actions { margin-top: 14px; display: flex; gap: 8px; justify-content: center; }
+.rb-actions button { padding: 6px 14px; cursor: pointer; }
+/* short notices for the user's own actions (fade out) */
+.toasts { position: absolute; left: 50%; top: 52px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; z-index: 6; pointer-events: none; }
+.toast { background: rgba(20, 22, 28, 0.92); color: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12px; transition: opacity 0.6s; }
+.toast.out { opacity: 0; }
+
+/* ---------- 3D view (view3d.js) ---------- */
+.view3d { display: none; position: absolute; inset: 0; background: var(--cam-bg); }
+body.mode-3d .view3d { display: block; }
+body.mode-3d .cam-view { display: none; }  /* offline data: no live camera here */
+.view3d-host { position: absolute; inset: 0; }
+.view3d-host canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+.view3d-info { display: block; max-width: 60%; min-width: 280px; font-size: 12px; line-height: 1.5; }
+.view3d-info #view3dInfo { font: inherit; }
+.progress { height: 6px; margin-top: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.progress[hidden] { display: none; }
+.progress-bar { height: 100%; width: 0; background: var(--accent); transition: width 0.3s; }
+.progress.busy .progress-bar { width: 30%; animation: progress-busy 1.2s ease-in-out infinite; }
+@keyframes progress-busy { from { margin-left: -30%; } to { margin-left: 100%; } }
+.segmented.small button { padding: 4px 10px; }
+#sessionSelect { max-width: 260px; }
+.map-toolbar button.chip.delete { color: #ff8a8a; }
+
+/* ---------- Labels in the 3D view (labels3d.js, projects/scene_understanding) ---------- */
+.label-status { margin-top: 4px; color: #c9ced6; }
+.label-status.warn { color: var(--warn); }
+.label-tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.label-tags[hidden] { display: none; }
+.label-tags div { position: absolute; transform: translate(-50%, -100%); padding: 1px 6px; border-radius: 4px;
+  border-left: 4px solid; background: rgba(10, 12, 16, 0.78); color: #e7e9ee; white-space: nowrap; font-size: 11px;
+  pointer-events: auto; cursor: pointer; }
+.label-tags div.sel { outline: 2px solid #fff; }
+.label-panel { position: absolute; top: 52px; right: 10px; bottom: 10px; width: 320px; display: flex; flex-direction: column;
+  gap: 8px; padding: 10px; border-radius: 10px; background: rgba(10, 12, 16, 0.82); border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px); color: #e7e9ee; font-size: 12px; overflow: hidden; }
+.label-panel[hidden] { display: none; }
+.label-panel input { width: 100%; box-sizing: border-box; background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font: inherit; }
+#labelList { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
+#labelList li { display: flex; gap: 8px; align-items: center; padding: 3px 6px; border-radius: 6px; cursor: pointer; }
+#labelList li:hover { background: rgba(255, 255, 255, 0.06); }
+#labelList li.sel { background: var(--accent-soft); }
+#labelList li.group { cursor: default; margin-top: 8px; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+#labelList li.group:hover { background: none; }
+#labelList .n { margin-left: auto; color: var(--muted); font-size: 11px; }
+.label-panel .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; display: inline-block; }
+#labelDetails { border: 1px solid var(--border); border-radius: 8px; padding: 8px; max-height: 55%; overflow-y: auto; }
+#labelDetails h3 { margin: 0 0 4px; font-size: 14px; display: flex; gap: 8px; align-items: center; text-transform: none; letter-spacing: normal; }
+#labelDetails p { margin: 4px 0; }
+#labelDetails .warn { color: var(--warn); }
+#labelDetails dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 6px 0; }
+#labelDetails dt { color: var(--muted); }
+#labelDetails dd { margin: 0; }
+#labelDetails .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+#labelDetails .imgs img { width: 100%; border-radius: 4px; cursor: zoom-in; }
+.label-big { padding: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+/* 1.5x the 640x400 keyframes, but never more than the screen: width from the viewport's width and,
+   via the images' 1.6 aspect, its height (minus the button row) */
+.label-big img { display: block; width: min(960px, 92vw, calc((90vh - 52px) * 1.6)); height: auto; }
+.label-big form { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
+.label-big form .spacer { flex: 1; }
+.label-big button.chip { cursor: pointer; }
+#labelBigCount { font-size: 12px; color: var(--muted); }
+.label-big-stage { position: relative; }
+/* big round arrows on the image's left and right edge */
+.label-big-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px;
+  border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(10, 12, 16, 0.6);
+  color: #fff; font-size: 30px; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0 0 4px; }
+.label-big-nav:hover { background: rgba(10, 12, 16, 0.85); border-color: var(--accent); }
+.label-big-nav.prev { left: 12px; }
+.label-big-nav.next { right: 12px; }
+.label-big-nav[hidden] { display: none; }
+
+/* session dropdown: name in focus, status indicators small and muted. Customizable <select>
+   (Chromium 135+); elsewhere the indicators are plain text after the name */
+#sessionSelect, #sessionSelect::picker(select) { appearance: base-select; }
+/* wide enough for the name and both indicators (the plain select had 260 px for the name alone) */
+#sessionSelect { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; max-width: 440px; }
+#sessionSelect::picker(select) { background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px; margin-top: 4px; }
+#sessionSelect option { padding: 4px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; }
+#sessionSelect option:hover { background: rgba(255, 255, 255, 0.06); }
+#sessionSelect option:checked { background: var(--accent-soft); }
+#sessionSelect option::checkmark { display: none; }
+#sessionSelect .ind { color: var(--muted); font-size: 10.5px; }
+#sessionSelect > button { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: inherit; color: inherit; background: none; border: 0; padding: 0; }
+#sessionSelect::picker-icon { color: var(--muted); }
+#sessionSelect .ind.busy { color: var(--accent); }
+#sessionSelect .ind.bad { color: var(--warn); }

@@ -1,0 +1,34 @@
+{
+ "description": "rgb_camera_link correction: camera pose = arm.frame('rgb_camera_link', joints) @ X, joints with config/arm_joints.json (projects/manipulation/solve_camera.py)",
+ "views": [
+  "views_20261012_123445"
+ ],
+ "rms_px": 5.245,
+ "X": [
+  [
+   0.999681,
+   0.025224,
+   -0.000908,
+   0.018745
+  ],
+  [
+   -0.025233,
+   0.999615,
+   -0.011574,
+   0.004211
+  ],
+  [
+   0.000616,
+   0.011593,
+   0.999933,
+   -0.006148
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "joint_zero_errors_rad": null
+}

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LanderPi Tasks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="map_view.css">
+  <link rel="stylesheet" href="tasks.css">
+</head>
+<!-- Task console (projects/navigation): a mapped and labelled room in 3D with the live robot in it.
+     The slots below get the mapping console's shared parts (top bar, camera, drive strip, lidar, arm,
+     settings drawer) from index.html, driven by the same app.js (tasks_boot.js), so both consoles have
+     the same controls, keys and names. The navigator (projects/navigation/navigator.py) localizes the
+     robot; the labels and their panel are the 3D view's (labels3d.js). -->
+<body class="tasks-page">
+  <div id="topbarSlot"></div>
+
+  <main class="dash tasks-dash">
+    <section class="card camera">
+      <div id="view3d" class="view3d">
+        <div id="view3dHost" class="view3d-host"></div>
+        <div class="map-toolbar">
+          <select id="roomSelect" class="chip" title="The room the robot is in (add one with Use as room in the mapping console's 3D view)"></select>
+          <button id="roomDeleteBtn" class="chip delete icon-chip" title="Remove this room from the list (asks first; the recording and its labels stay)">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
+          </button>
+          <span id="navStatus" class="pill chip" data-state="off">Localization off</span>
+          <button id="pinBtn" class="chip" title="Pin & go: click a spot on the floor, then Go to the pin (click again to leave)">📍 Pin &amp; go</button>
+          <button id="localizeTurnBtn" class="chip" title="Find the robot's position in the room: one turn on the spot (~15 s; needs Armed). Driving to objects needs it.">⟳ Localize</button>
+          <button id="recordBtn" class="chip record" title="Record what the robot does from now on: camera images with the detector's boxes, drives, finds and the chat (data/task_runs); a video is made when you stop">● Record</button>
+          <button id="runsBtn" class="chip" title="Recorded runs: play, keep, delete">Runs</button>
+          <span class="spacer"></span>
+          <div class="segmented small" title="What to show">
+            <button id="showMesh">Mesh</button>
+            <button id="showLabels" class="active">Labels</button>
+          </div>
+          <label class="chip"><input id="showScan" type="checkbox" checked> lidar</label>
+          <label class="chip"><input id="followRobot" type="checkbox"> follow robot</label>
+          <button id="resetViewBtn" class="chip" title="Look at the whole room again">reset view</button>
+        </div>
+
+        <div class="map-stats chip view3d-info task-info">
+          <span id="view3dInfo">Choose a room.</span>
+          <div id="view3dProgress" class="progress" hidden><div class="progress-bar"></div></div>
+          <div id="navMessage" class="nav-message"></div>
+          <div id="navPose" class="nav-pose"></div>
+          <div id="liveInfo" class="nav-live"></div>
+        </div>
+
+        <!-- the drive: Go to the selected object / the pin, Cancel while driving -->
+        <div id="goBox" class="go-box chip" hidden>
+          <button id="goBtn" class="btn" disabled>Go there</button>
+          <span id="goNote" class="small"></span>
+        </div>
+
+        <!-- labels3d.js expects these ids (same as in index.html) -->
+        <div id="labelTags" class="label-tags" hidden></div>
+        <aside id="labelPanel" class="label-panel" hidden>
+          <input id="labelFilter" type="text" placeholder="Filter: label, description, category…">
+          <div id="labelDetails" hidden></div>
+          <ul id="labelList"></ul>
+        </aside>
+        <dialog id="runsDialog" class="runs-dialog">
+          <video id="runVideo" controls preload="metadata" hidden></video>
+          <div id="runList" class="run-list"></div>
+          <form method="dialog" class="runs-foot">
+            <span id="runsInfo" class="muted small"></span>
+            <span class="spacer"></span>
+            <button class="chip">Close</button>
+          </form>
+        </dialog>
+        <dialog id="labelBig" class="label-big">
+          <div class="label-big-stage">
+            <img alt="">
+            <button type="button" id="labelBigPrev" class="label-big-nav prev" title="Previous view">‹</button>
+            <button type="button" id="labelBigNext" class="label-big-nav next" title="Next view">›</button>
+          </div>
+          <form method="dialog">
+            <span id="labelBigCount"></span>
+            <span class="spacer"></span>
+            <button class="chip">Close</button>
+          </form>
+        </dialog>
+      </div>
+      <div id="camSlot"></div>
+    </section>
+
+    <div id="stripSlot"></div>
+    <div id="lidarSlot"></div>
+    <div id="armSlot"></div>
+
+    <!-- the chat (projects/navigation/assistant.py in the navigator: a language model on the vLLM gateway
+         acting through tools, landerpi/tools.py) -->
+    <section class="card chat">
+      <div class="card-head">
+        <h2>Assistant</h2>
+        <button id="chatResetBtn" class="btn ghost small" title="Start the conversation over">New chat</button>
+      </div>
+      <div id="chatLog" class="chat-log"></div>
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" type="text" placeholder="Connect first" disabled autocomplete="off">
+        <button id="chatSend" class="btn" disabled>Send</button>
+      </form>
+    </section>
+  </main>
+
+  <div id="drawerSlot"></div>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+  <script type="module" src="tasks_boot.js"></script>
+</body>
+</html>

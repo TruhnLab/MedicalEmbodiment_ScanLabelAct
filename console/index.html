@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LanderPi Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="map_view.css">
+  <script src="vendor/roslib.min.js"></script>
+  <!-- 16-bit PNG decoding for depth images (browsers only decode 8 bits) -->
+  <script src="vendor/pako.min.js"></script>
+  <script src="vendor/UPNG.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo"></span>LanderPi</div>
+
+    <div class="conn">
+      <input id="url" spellcheck="false" title="rosbridge WebSocket URL">
+      <button id="connectBtn" class="btn">Connect</button>
+      <span id="status" data-state="off">Offline</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <span id="battery" data-level="none" title="Battery (2S: 8.4 V full, charge below ~7.2 V)">– V</span>
+    <label class="switch" title="Allow driving and arm motion">
+      <input id="armed" type="checkbox"><span class="track"><span class="thumb"></span></span><span class="switch-label">Armed</span>
+    </label>
+    <button id="stopBtn" class="btn danger" title="Stop everything (Space)">STOP</button>
+    <div class="segmented" role="tablist" title="Switch view (M)">
+      <button id="viewDriveBtn" class="active" role="tab">Drive</button>
+      <button id="viewMapBtn" role="tab">Map</button>
+      <button id="view3dBtn" role="tab">3D</button>
+    </div>
+    <button id="drawerBtn" class="btn ghost icon" title="Settings &amp; debug">⚙</button>
+  </header>
+
+  <main class="dash">
+    <!-- left: camera + control strip -->
+    <section class="card camera">
+      <!-- map view (projects/mapping): shown in "Map" mode, camera becomes a picture-in-picture -->
+      <div id="mapView" class="map-view">
+        <canvas id="mapCanvas"></canvas>
+        <div id="mapPlaceholder" class="map-placeholder">Start SLAM to build a map of the room.</div>
+        <div class="map-toolbar">
+          <span id="slamStatus" class="pill chip" data-state="off">SLAM offline</span>
+          <button id="slamStartBtn" class="chip" title="Start the SLAM container on this laptop">Start SLAM</button>
+          <button id="slamResetBtn" class="chip" title="Throw the current map away and start a new one" disabled>New map</button>
+          <button id="slamStopBtn" class="chip" title="Stop the SLAM container" disabled>Stop</button>
+          <button id="saveMapBtn" class="chip" title="Save the map to data/maps" disabled>Save map</button>
+          <button id="recordBtn" class="chip record" title="Record colour, depth and all sensors (with SLAM poses) to data/sessions">● Record</button>
+          <button id="exploreBtn" class="chip explore" title="Explore the room autonomously and record it (STOP or Space pauses, Resume continues)" disabled>▶ Explore</button>
+          <button id="noGoBtn" class="chip" title="Draw a no-go line: click its two ends on the map. The robot won't cross it and doesn't explore behind it (also during exploration). Drag an end to move it, right-click a line to remove it.">✎ No-go line</button>
+          <button id="noGoClearBtn" class="chip" title="Remove all no-go lines" hidden>✕ lines</button>
+          <span class="spacer"></span>
+          <label class="chip"><input id="mapFollow" type="checkbox" checked> follow</label>
+          <button id="mapFitBtn" class="chip">fit</button>
+        </div>
+        <div id="explorePanel" class="explore-panel chip" hidden>
+          <div class="ep-head"><span id="epState">Exploring</span><span id="epTime">0:00</span></div>
+          <div id="epActivity" class="ep-activity"></div>
+          <div id="epNext" class="ep-next"></div>
+          <div class="ep-bar" title="Surfaces the camera has seen well enough (on the start's side of the no-go lines)"><div id="epBar"></div></div>
+          <div id="epCounts" class="ep-counts"></div>
+          <div class="ep-legend"><span><i style="background:#28c85a"></i>seen</span><span><i style="background:#eb4646"></i>to see</span><span><i style="background:#f09628"></i>given up</span><span><i style="background:#afb4be"></i>furniture (depth)</span><span><i class="line" style="background:var(--danger)"></i>no-go</span><span><i class="dash"></i>planned</span><span><i class="line" style="background:var(--accent)"></i>driven</span></div>
+          <details id="epHistory"><summary>History</summary><ol id="epEvents"></ol></details>
+        </div>
+        <div id="toasts" class="toasts"></div>
+        <div id="runBanner" class="run-banner chip" hidden>
+          <div id="rbTitle" class="rb-title"></div>
+          <div id="rbText" class="rb-text"></div>
+          <div id="rbStats" class="rb-stats"></div>
+          <div class="rb-actions"><button id="rb3d" class="chip" hidden>Open the 3D view</button><button id="rbClose" class="chip">OK</button></div>
+        </div>
+        <div class="map-stats chip">
+          <div><span class="k">Area</span><span id="mArea">–</span></div>
+          <div><span class="k">New / min</span><span id="mGrowth">–</span></div>
+          <div><span class="k">Path</span><span id="mPath">–</span></div>
+          <div><span class="k">Recorder</span><span id="recStatus">off</span></div>
+          <div><span class="k">Explore</span><span id="exStatus">off</span></div>
+          <div id="mHint" class="hint"></div>
+        </div>
+      </div>
+
+      <!-- 3D view (projects/mapping, M3): reconstructions of recorded sessions -->
+      <div id="view3d" class="view3d">
+        <div id="view3dHost" class="view3d-host"></div>
+        <div class="map-toolbar">
+          <!-- the button shows a copy of the chosen entry, with its indicators muted (map_view.css) -->
+          <select id="sessionSelect" class="chip" title="Recorded session"><button><selectedcontent></selectedcontent></button></select>
+          <button id="reconstructBtn" class="chip" title="Build the 3D model of this session on the laptop">Reconstruct</button>
+          <button id="labelBtn" class="chip" title="Find and name the objects of this session: VLM from the laptop, YOLOE on the GPU cluster (7-15 min)">Label</button>
+          <button id="roomBtn" class="chip" disabled title="Make this labelled session a room the task console can put the robot into (projects/navigation)">Use as room</button>
+          <button id="deleteSessionBtn" class="chip delete" title="Delete this recording and its 3D model from the laptop (asks first)">Delete</button>
+          <span class="spacer"></span>
+          <div class="segmented small" title="What to show">
+            <button id="show3dPoints">Points</button>
+            <button id="show3dMesh" class="active" title="Mesh from the laptop reconstruction">Mesh</button>
+            <button id="show3dLabels" disabled title="Objects found by Label">Labels</button>
+          </div>
+          <label class="chip"><input id="show3dPath" type="checkbox" checked> camera path</label>
+          <button id="reset3dBtn" class="chip" title="Look at the whole model again">reset view</button>
+        </div>
+        <div class="map-stats chip view3d-info">
+          <span id="view3dInfo">Select a session.</span>          <div id="view3dProgress" class="progress" hidden><div class="progress-bar"></div></div>
+          <div id="labelStatus" class="label-status" hidden></div>
+          <div id="labelProgress" class="progress" hidden><div class="progress-bar"></div></div>
+        </div>
+        <!-- Labels (labels3d.js, projects/scene_understanding) -->
+        <div id="labelTags" class="label-tags" hidden></div>
+        <aside id="labelPanel" class="label-panel" hidden>
+          <!-- type="text": app.js leaves keys in text fields alone, all others drive the robot -->
+          <input id="labelFilter" type="text" placeholder="Filter: label, description, category…">
+          <div id="labelDetails" hidden></div>
+          <ul id="labelList"></ul>
+        </aside>
+        <dialog id="labelBig" class="label-big">
+          <div class="label-big-stage">
+            <img alt="">
+            <button type="button" id="labelBigPrev" class="label-big-nav prev" title="Previous view">‹</button>
+            <button type="button" id="labelBigNext" class="label-big-nav next" title="Next view">›</button>
+          </div>
+          <form method="dialog">
+            <span id="labelBigCount"></span>
+            <span class="spacer"></span>
+            <button class="chip">Close</button>
+          </form>
+        </dialog>
+      </div>
+
+      <div class="cam-view" title="">
+        <img id="camImg" alt="">
+        <canvas id="camCanvas"></canvas>
+        <div id="camPlaceholder">Not connected</div>
+        <div id="banner" class="banner" hidden></div>
+        <div class="cam-overlay">
+          <select id="cameraTopic" class="chip" title="Camera topic"></select>
+          <span id="camStats" class="chip muted">–</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card strip">
+      <div class="pad">
+        <button data-action="strafeL" class="mecanum-only" title="Strafe left (Q)">⇤</button>
+        <button data-action="fwd" title="Forward (W)">▲</button>
+        <button data-action="strafeR" class="mecanum-only" title="Strafe right (E)">⇥</button>
+        <button data-action="left" title="Rotate left (A)">⟲</button>
+        <button data-action="back" title="Back (S)">▼</button>
+        <button data-action="right" title="Rotate right (D)">⟳</button>
+      </div>
+
+      <div class="speeds">
+        <label>Drive <span id="maxLinVal"></span><input id="maxLin" type="range" min="0.05" max="0.5" step="0.05"></label>
+        <label>Turn <span id="maxAngVal"></span><input id="maxAng" type="range" min="0.1" max="2.0" step="0.1"></label>
+        <label>Arm <span id="armSpeedVal"></span><input id="armSpeed" type="range" min="50" max="400" step="25"></label>
+      </div>
+
+      <div class="hints">
+        <div class="keys">
+          <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive</span>
+          <span><kbd>Q</kbd><kbd>E</kbd> strafe</span>
+          <span><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> arm / camera</span>
+          <span><kbd>R</kbd><kbd>F</kbd> gripper</span>
+          <span><kbd>H</kbd> home · <kbd>P</kbd> survey</span>
+          <span><kbd>M</kbd> map / drive view</span>
+          <span><kbd>Space</kbd> stop</span>
+        </div>
+        <div id="twistReadout" class="mono muted">–</div>
+        <div id="lastLog" class="lastlog muted">Ready.</div>
+      </div>
+    </section>
+
+    <!-- right: lidar + arm -->
+    <section class="card lidar">
+      <div class="card-head">
+        <h2>Lidar</h2>
+        <span id="scanStats" class="muted small">–</span>
+        <label class="zoom muted small" title="Display range in metres">
+          <input id="scanRange" type="number" min="1" max="15" step="1"> m
+        </label>
+      </div>
+      <div class="scan-wrap"><canvas id="scanCanvas"></canvas></div>
+    </section>
+
+    <section class="card armpanel">
+      <div class="card-head">
+        <h2>Arm</h2>
+        <span class="muted small">hold to move</span>
+        <button id="armSurveyBtn" class="btn ghost small" title="Arm to survey pose for mapping: camera looks ahead (P)">Survey</button>
+        <button id="armSaveSurveyBtn" class="btn ghost small icon" title="Save the current arm pose as survey pose (Shift+P)">⤓</button>
+        <button id="armHomeBtn" class="btn ghost small" title="Arm to start pose (H)">Home</button>
+      </div>
+      <div id="jointRows" class="joints"></div>
+    </section>
+  </main>
+
+  <!-- settings & debug drawer -->
+  <div id="scrim" class="scrim"></div>
+  <aside id="drawer" class="drawer" aria-label="Settings and debug">
+    <div class="drawer-head">
+      <h2>Settings &amp; debug</h2>
+      <button id="drawerClose" class="btn ghost icon" title="Close (Esc)">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <h3>Robot power</h3>
+      <div class="form">
+        <div id="powerStatus" class="muted small">–</div>
+        <div class="row">
+          <button id="rebootBtn" class="btn ghost" disabled>Reboot</button>
+          <button id="shutdownBtn" class="btn danger" disabled>Shut down</button>
+        </div>
+        <p class="muted small">Needs the local helper (start_mapping_console.bat). Shutdown stops Linux safely; switch the
+          robot off with its power switch afterwards, or the board keeps draining the battery.</p>
+      </div>
+
+      <h3>Battery</h3>
+      <div class="form">
+        <label class="check"><input id="batterySound" type="checkbox"> Soft chime on the laptop for battery warnings</label>
+        <label class="check"><input id="robotIndicators" type="checkbox"> Show battery status on the robot's LEDs and display</label>
+        <p class="muted small">Warns at 7.4 V, disarms motion at 7.1 V, before the robot's own buzzer (~7.0 V).
+          LEDs: green OK · amber low · blinking red critical. Only active while this page is connected.</p>
+      </div>
+
+      <h3>Camera</h3>
+      <div class="form">
+        <label>Source
+          <select id="cameraSource">
+            <option value="mjpeg">MJPEG from the robot (fast, like the app)</option>
+            <option value="rosbridge">rosbridge raw (fallback, slow)</option>
+          </select>
+        </label>
+        <label id="fpsLabel">Frames per second <input id="fps" type="number" min="1" max="30" step="1"></label>
+      </div>
+
+      <h3>Drive</h3>
+      <div class="form">
+        <label>Velocity topic
+          <input id="cmdVelTopic" list="twistTopics" spellcheck="false">
+          <datalist id="twistTopics"></datalist>
+        </label>
+        <label>Chassis
+          <select id="chassis">
+            <option value="mecanum">Mecanum</option>
+            <option value="tank">Tank</option>
+            <option value="ackermann">Ackermann</option>
+          </select>
+        </label>
+      </div>
+
+      <h3>Lidar</h3>
+      <div class="form">
+        <label>Scan topic <select id="scanTopic"></select></label>
+      </div>
+
+      <h3>Topics</h3>
+      <div class="row">
+        <input id="topicFilter" placeholder="Filter…" spellcheck="false">
+        <button id="refreshBtn" class="btn ghost small">Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <tbody id="topicRows"></tbody>
+        </table>
+      </div>
+      <div id="echoTitle" class="muted small">Click a topic to view its messages.</div>
+      <pre id="echoOut" class="mono"></pre>
+
+      <h3>Nodes</h3>
+      <pre id="nodeList" class="mono muted"></pre>
+
+      <h3>Log</h3>
+      <div id="log" class="mono"></div>
+    </div>
+  </aside>
+
+  <script src="app.js"></script>
+  <script src="map_view.js"></script>
+  <!-- three.js (stored locally) for the 3D view -->
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+  <script type="module" src="view3d.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+name: landerpi
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - numpy
+  - pip:
+      - paramiko>=3.4
+      - websockets>=13
+      - opencv-python-headless>=4.9
+      - matplotlib>=3.8
+      - open3d>=0.18
+      - scipy>=1.11
+      - requests>=2.31     # vLLM gateway (projects/scene_understanding)
+      - pydantic>=2.6      # answer schemas the VLM must follow
+      # open-vocabulary detection (landerpi/detector.py; Ultralytics is AGPL-3.0, see README): CPU-only torch, the laptop has no GPU
+      - --extra-index-url https://download.pytorch.org/whl/cpu
+      - torch>=2.4
+      - torchvision
+      - ultralytics>=8.4
+      - clip @ git+https://github.com/ultralytics/CLIP.git   # YOLOE's and YOLO-World's text prompts need it (ultralytics installs it on first use too)
+      - imageio-ffmpeg   # the task console's recorded runs as H.264 video (projects/navigation/taskrun.py)
+# afterwards, once:  conda run -n landerpi pip install -e .

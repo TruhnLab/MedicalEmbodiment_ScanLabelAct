@@ -1,0 +1,22 @@
+{
+ "description": "where the block appears when the gripper is in the pre-grasp pose straight above it (projects/manipulation/grasp.py teach)",
+ "date": "2026-10-12 12:50",
+ "down_deg": 60,
+ "retreat_m": 0.1,
+ "grasp_z": 0.015,
+ "block_px": {
+  "x": 333.308181096108,
+  "y": 259.42467566851997,
+  "w": 86,
+  "h": 94,
+  "area": 7554
+ },
+ "servos": {
+  "1": 493,
+  "2": 514,
+  "3": 76,
+  "4": 267,
+  "5": 500
+ },
+ "picture": "grasp_teach_125037.jpg"
+}

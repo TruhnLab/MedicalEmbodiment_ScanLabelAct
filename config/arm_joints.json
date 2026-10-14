@@ -1,0 +1,18 @@
+{
+ "description": "degrees per servo pulse of the arm joints, used by projects/manipulation/arm.py. Nominal 0.24: with it the arm put the gripper where the user measured it (2026-10-12, holds over T2/T5: 3 mm), the camera-sweep values (camera_sweeps_deg_per_pulse, solve_gains.py) were 32 mm off. Why the camera's rotations say otherwise is open.",
+ "date": "2026-10-12",
+ "camera_sweeps_deg_per_pulse": {
+  "1": 0.232,
+  "2": 0.2651,
+  "3": 0.2524,
+  "4": 0.2552,
+  "5": 0.24
+ },
+ "deg_per_pulse": {
+  "1": 0.24,
+  "2": 0.24,
+  "3": 0.24,
+  "4": 0.24,
+  "5": 0.24
+ }
+}

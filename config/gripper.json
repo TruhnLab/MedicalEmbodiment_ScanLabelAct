@@ -1,0 +1,56 @@
+{
+ "date": "2026-10-12 09:30",
+ "servo": 10,
+ "note": "inner gap between the jaw pads, measured with a ruler by the user (check_arm.py gripper-to). The servo stops at both ends (201 open, ~539-545 closed); closed, the jaws still stand 12-13 mm apart. The robot's boot pose commands 150, i.e. presses against the open stop. Check by interpolation: 474 -> 18 mm predicted, 17 measured; 335 -> 35, 35. Commands beyond 545 only make the servo strain (600 stayed at 545).",
+ "low": 201,
+ "low_stop": "blocked",
+ "high": 545,
+ "high_stop": "blocked",
+ "open": 201,
+ "closed": 545,
+ "widths_mm": [
+  [
+   226,
+   48
+  ],
+  [
+   300,
+   40
+  ],
+  [
+   376,
+   29
+  ],
+  [
+   451,
+   20
+  ],
+  [
+   532,
+   13
+  ],
+  [
+   539,
+   12.5
+  ]
+ ],
+ "grip_tests": [
+  {
+   "date": "2026-10-12",
+   "block_mm": 29.5,
+   "contact": 403,
+   "contact_lag": 20,
+   "hold_lag": 14,
+   "held": "firm"
+  },
+  {
+   "date": "2026-10-12",
+   "block_mm": 29.5,
+   "contact": 399,
+   "contact_lag": 8,
+   "hold_lag": 10,
+   "held": "okay, less firm"
+  }
+ ],
+ "contact_note": "on contact the jaws are ~25 pulses past where the table says the block's width is (they give way): the contact position reads ~3.5 mm narrower than the object (one block so far)"
+}

@@ -1,0 +1,22 @@
+# Offboard ROS container: ROS 2 on the laptop for SLAM and autonomous exploration.
+#   docker compose -f offboard_ros/docker-compose.yml up --build
+# The console's Map view talks to it on ws://127.0.0.1:9091.
+services:
+  offboard-ros:
+    build: .
+    image: landerpi-offboard-ros
+    container_name: landerpi-offboard-ros
+    environment:
+      ROBOT_URL: ws://192.168.149.1:9090
+      # where exploration velocity commands go; LANDERPI_CMD_OUT=/landerpi/cmd_vel_dryrun for dry runs
+      CMD_OUT: ${LANDERPI_CMD_OUT:-/controller/cmd_vel}
+    ports:
+      - "127.0.0.1:9091:9091"
+    volumes:
+      - ../data/maps:/offboard_ros/maps   # slam_toolbox saves maps here
+      - ../config:/config:ro              # camera_correction.json (explorer: depth obstacles)
+    cap_add: [SYS_PTRACE]    # slam_watchdog.py: gdb stack traces of a frozen slam_toolbox
+    init: true               # forwards stop signals, reaps processes
+    stop_signal: SIGINT      # what ros2 launch expects for a clean shutdown
+    stop_grace_period: 20s
+    restart: "no"
