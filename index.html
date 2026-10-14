@@ -4,24 +4,248 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Scan, Label, Act</title>
-  <meta name="description" content="A small mobile manipulator that scans a room and then works in it.">
-  <style>
-    :root { --bg: #ffffff; --fg: #1d1f23; --muted: #5b616b; --accent: #2457c5; }
-    @media (prefers-color-scheme: dark) { :root { --bg: #15171a; --fg: #e6e8eb; --muted: #9aa1ab; --accent: #7aa2ff; } }
-    body { margin: 0; background: var(--bg); color: var(--fg);
-           font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-    main { max-width: 720px; margin: 0 auto; padding: 72px 16px; }
-    h1 { font-size: 2.2rem; line-height: 1.2; margin: 0 0 12px; }
-    p { margin: 0 0 16px; color: var(--muted); }
-    a { color: var(--accent); }
-  </style>
+  <meta name="author" content="Dennis Eschweiler, Daniel Truhn">
+  <meta name="description" content="A robot that scans a room and then works in it, a first step towards robots that assist medical staff. Autonomous exploration, labelled 3D reconstruction, localization, object search, grasping and language-instructed tasks.">
+  <meta name="theme-color" content="#f1f3f7">
+  <meta property="og:title" content="Scan, Label, Act">
+  <meta property="og:description" content="A robot that scans a room and then works in it, a first step towards robots that assist medical staff.">
+  <meta property="og:image" content="assets/media/teaser.jpg">
+  <link rel="icon" href="assets/media/lab-logo.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script type="importmap">
+    { "imports": { "three": "./assets/vendor/three/three.module.min.js",
+                   "three/addons/controls/OrbitControls.js": "./assets/vendor/three/OrbitControls.js" } }
+  </script>
+  <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
-  <main>
-    <h1>Scan, Label, Act</h1>
-    <p>A small mobile manipulator that scans a room and then works in it.</p>
-    <p>This page is being written. Code and documentation:
-      <a href="https://github.com/TruhnLab/MedicalEmbodiment_ScanLabelAct">TruhnLab/MedicalEmbodiment_ScanLabelAct</a>.</p>
+  <header class="bar">
+    <div class="wide bar-inner">
+      <a class="lab" href="https://truhn.ai/">
+        <img src="assets/media/lab-logo.svg" alt="" width="30" height="30">
+        <span>Lab for Artificial Intelligence in Medicine</span>
+      </a>
+      <nav aria-label="On this page">
+        <a class="link" href="#method">Method</a>
+        <a class="link" href="#runs">Runs</a>
+        <a class="link" href="#reconstruction">Reconstruction</a>
+        <a class="link" href="#tasks">Tasks</a>
+        <a class="btn small" href="https://github.com/TruhnLab/MedicalEmbodiment_ScanLabelAct">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+          Code
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ======================= header and teaser ======================= -->
+    <section class="hero wide">
+      <span class="eyebrow">MedicalEmbodiment</span>
+      <h1><span class="w">Scan,</span> <span class="w">Label,</span> <span class="w act">Act</span></h1>
+      <p class="tagline">A robot that scans a room and then works in it, a&nbsp;first step towards robots that assist medical staff</p>
+      <p class="authors"><span>Dennis Eschweiler</span><span>Daniel Truhn</span></p>
+      <p class="byline"><a href="https://truhn.ai/">Lab for Artificial Intelligence in Medicine</a> <span style="white-space:nowrap">&nbsp;·&nbsp; October 2026</span></p>
+      <figure class="teaser settle">
+        <div class="float">
+          <video id="teaser" src="assets/media/teaser.mp4" poster="assets/media/teaser.jpg" autoplay muted loop playsinline preload="auto"
+                 aria-label="Overview video showing the autonomous exploration of a kitchen, the labelled 3D reconstruction, object search and grasping"></video>
+        </div>
+        <ol class="chapters" id="chapters" aria-label="Parts of the video">
+          <li><button type="button" data-start="0"><span class="n">1</span>Exploration<span class="fill"></span></button></li>
+          <li><button type="button" data-start="8"><span class="n">2</span>Labelled reconstruction<span class="fill"></span></button></li>
+          <li><button type="button" data-start="14"><span class="n">3</span>Object search<span class="fill"></span></button></li>
+          <li><button type="button" data-start="23.15"><span class="n">4</span>Grasping<span class="fill"></span></button></li>
+        </ol>
+      </figure>
+    </section>
+
+    <!-- ======================= abstract ======================= -->
+    <section class="abstract wide">
+      <div class="narrow reveal">
+        <h2 class="small">Abstract</h2>
+        <p>Our long-term aim is to study humanoid robots in medical environments, where a robot has to find its way in
+          rooms it has not seen before and work with the objects in them. As a first step, we build a minimal baseline
+          on a low-cost wheeled robot with an arm, the Hiwonder LanderPi. The robot explores an unknown room
+          autonomously and records lidar and RGB-D data. From this recording we build a 2D map, a 3D reconstruction and
+          a set of labelled 3D objects. The labelled room then serves as the robot's world model. The robot localizes
+          itself in it, navigates to objects, searches for items with its camera, picks up small objects and carries
+          out instructions in natural language through a vision-language model that calls these skills as tools. No
+          component is trained for a specific room or task, and the robot itself only streams sensor data and receives
+          commands. We intend the approach to be general and not tied to one robot. The LanderPi is the platform we
+          start with.</p>
+      </div>
+    </section>
+
+    <!-- ======================= method ======================= -->
+    <section id="method" class="wide">
+      <div class="head center narrow reveal">
+        <h2>Method</h2>
+      </div>
+      <div class="steps">
+        <a class="step reveal" href="#runs" style="--d:0s">
+          <div class="pic"><img src="assets/media/explore.jpg" alt="Lidar map with the path driven, next to the 3D reconstruction" loading="lazy" style="object-fit:contain"></div>
+          <div class="txt"><h3><span>1</span>Exploration</h3><p>The robot maps the room with its lidar and selects viewpoints
+            until the depth camera has observed every reachable surface.</p><p class="more">Example runs ↓</p></div>
+        </a>
+        <a class="step reveal" href="#reconstruction" style="--d:.08s">
+          <div class="pic"><img src="assets/media/labels.jpg" alt="The kitchen reconstruction with each object in its own colour" loading="lazy"></div>
+          <div class="txt"><h3><span>2</span>Reconstruction and labelling</h3><p>Keyframes are fused into a mesh. A
+            vision-language model lists the objects, an open-vocabulary detector locates them, and the detections are
+            merged into 3D objects.</p><p class="more">Interactive model ↓</p></div>
+        </a>
+        <div class="step reveal" style="--d:.16s">
+          <div class="pic"><img src="assets/media/localization.png" alt="Lidar scans of one rotation, the match score over the map, and the resulting pose" loading="lazy" style="object-fit:contain;padding:10px"></div>
+          <div class="txt"><h3><span>3</span>Localization</h3><p>In a known room, the lidar scans of one rotation in place
+            are matched against the stored map.</p></div>
+        </div>
+        <a class="step reveal" href="#tasks" style="--d:.24s">
+          <div class="pic tools" aria-label="Some of the tools available to the vision-language model">
+            <span class="hot">drive_to_object</span><span>turn_to_object</span><span>look_at</span>
+            <span class="hot">watch_for</span><span>search_here</span><span>approach_found</span>
+            <span class="hot">pick_up_object</span><span>put_down_object</span>
+          </div>
+          <div class="txt"><h3><span>4</span>Task execution</h3><p>A vision-language model plans the task and calls
+            navigation, visual search and grasping skills as tools.</p><p class="more">Demonstrations ↓</p></div>
+        </a>
+      </div>
+      <div class="step-next reveal">
+        <h3><span>5</span>Real2Sim <em>In progress</em></h3>
+        <p>The scanned rooms are already used as simplified simulations for testing. A physical simulation with realistic
+          rendering, in which the robot can be trained, is work in progress and will be added soon.</p>
+      </div>
+    </section>
+
+    <!-- ======================= 1 exploration runs ======================= -->
+    <section id="runs" class="wide">
+      <div class="head center narrow reveal">
+        <h2>Exploration runs</h2>
+        <p class="lead">For each of the three rooms we scanned, the best run is shown with its lidar occupancy map and
+          the path driven.</p>
+      </div>
+      <div class="tabs reveal">
+        <div class="seg" role="tablist" aria-label="Rooms" id="runTabs"><span class="pill" aria-hidden="true"></span></div>
+      </div>
+      <div class="float runview settle" id="runView">
+        <div class="map" id="runMap"></div>
+        <div class="side">
+          <h3 id="runTitle"></h3>
+          <dl id="runStats"></dl>
+          <button type="button" class="btn small" id="runReplay">Replay the path</button>
+        </div>
+      </div>
+      <p class="note center reveal" id="runTotals"></p>
+    </section>
+
+    <!-- ======================= 2 the 3D room ======================= -->
+    <section id="reconstruction" class="wide">
+      <div class="head center narrow reveal">
+        <h2>Labelled 3D reconstruction</h2>
+        <p class="lead">Reconstruction of a kitchen from one autonomous run, with the objects found by the labelling
+          pipeline. Drag to rotate the model and select an object to see its label and description.</p>
+      </div>
+      <div class="float room settle" id="roomView">
+        <div class="loading" id="roomLoading">Loading the reconstruction …</div>
+        <div class="tags" id="roomTags"></div>
+        <div class="ui">
+          <div class="seg" role="group" aria-label="Colouring">
+            <span class="pill" aria-hidden="true"></span>
+            <button type="button" data-mode="0" aria-pressed="false">RGB</button>
+            <button type="button" data-mode="1" aria-pressed="true">Objects</button>
+          </div>
+          <span class="hint" id="roomHint">Drag to rotate · click, then scroll to zoom</span>
+        </div>
+        <div class="info" id="roomInfo" hidden><h3><i></i><span></span></h3><p></p></div>
+      </div>
+      <div class="facts reveal">
+        <span><b>16.9</b> min exploration</span>
+        <span><b>2,764</b> keyframes</span>
+        <span><b>85 %</b> surface coverage</span>
+        <span><b>40</b> objects</span>
+      </div>
+      <div class="pipeline reveal">
+        <h3>How the objects are labelled</h3>
+        <ol>
+          <li class="data"><b>Keyframes</b><span>RGB-D</span><p>About 100 to 170 views that together cover the room.</p></li>
+          <li class="qwen"><b>Word list</b><span>Qwen</span><p>Qwen is asked what is in the room and lists furniture, doors, fixtures and similar.</p></li>
+          <li class="yoloe"><b>Segmentation</b><span>YOLOE</span><p>YOLOE finds each word of the list in every keyframe and segments it.</p></li>
+          <li class="data"><b>Lift to 3D</b><span>Depth</span><p>The masks become 3D points with the measured depth, and the views are merged into objects.</p></li>
+          <li class="qwen"><b>Check</b><span>Qwen</span><p>Qwen decides for nearby objects whether they are the same, part of another or different, and then names each object.</p></li>
+          <li class="data"><b>Scene file</b><span>scene.json</span><p>Every named object with its description and position. This is the robot's world model.</p></li>
+        </ol>
+        <div class="legend">
+          <span><i class="qwen"></i>Qwen, vision-language model</span>
+          <span><i class="yoloe"></i>YOLOE, open-vocabulary detector</span>
+          <span><i class="data"></i>Data</span>
+          <span class="time">Labelling a room takes 7 to 15 minutes.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= 4 tasks ======================= -->
+    <section id="tasks" class="wide">
+      <div class="head center narrow reveal">
+        <h2>Language-instructed tasks</h2>
+        <p class="lead">A vision-language model receives the room's object list and the robot's state and calls
+          navigation, search and grasping skills as tools. All runs are autonomous after the instruction.</p>
+      </div>
+      <div class="tabs reveal">
+        <div class="seg" role="tablist" aria-label="Demonstrations" id="demoTabs">
+          <span class="pill" aria-hidden="true"></span>
+          <button type="button" role="tab" aria-pressed="true" aria-controls="demo-find" data-demo="find">Object search</button>
+          <button type="button" role="tab" aria-pressed="false" aria-controls="demo-pick" data-demo="pick">Grasping</button>
+          <button type="button" class="later" disabled title="Further tasks will be added">Coming soon</button>
+        </div>
+      </div>
+      <div class="demo" id="demo-find" role="tabpanel">
+        <div class="ask"><p class="bubble"><span class="who">Instruction</span>There is a cup left of the outlet. Please find and approach it.</p></div>
+        <div class="float settle"><video src="assets/media/find.mp4" poster="assets/media/find.jpg" controls muted loop playsinline preload="metadata"
+             aria-label="The robot drives towards the power outlet, detects the cup on the way and stops in front of it"></video></div>
+        <p class="outcome">The robot drives towards the power outlet, which it knows from the object list, and detects the
+          cup on the way. It stops 0.2&nbsp;m in front of the cup 31&nbsp;s after the instruction. The video runs at
+          twice the speed.</p>
+      </div>
+      <div class="demo" id="demo-pick" role="tabpanel" hidden>
+        <div class="ask"><p class="bubble"><span class="who">Instruction</span>I moved it a bit. Please pick it up again.</p></div>
+        <div class="float"><video src="assets/media/pick.mp4" poster="assets/media/pick.jpg" controls muted loop playsinline preload="none"
+             aria-label="The robot detects a red cube, approaches it, centres the gripper over it and lifts it"></video></div>
+        <p class="outcome">The robot detects the 30&nbsp;mm cube at its new position, centres the gripper over it using the
+          camera on the arm and lifts it 66&nbsp;s after the instruction.</p>
+      </div>
+    </section>
+
+    <!-- ======================= platform ======================= -->
+    <section id="platform" class="wide">
+      <div class="robot-photo reveal">
+        <div class="float"><img src="assets/media/robot.jpg" alt="The robot, a four-wheeled base with an arm and a camera on the gripper" loading="lazy" width="546" height="728"></div>
+        <div>
+          <h2>Platform</h2>
+          <p class="lead">The Hiwonder LanderPi has a mecanum-wheeled base with a 2D lidar, an RGB-D camera on a
+            five-servo arm with gripper, and a Raspberry Pi 5 running ROS 2. The robot streams its sensor data and
+            receives commands. All processing runs off-board, and language models are queried through an
+            OpenAI-compatible server.</p>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer>
+    <div class="wide cols">
+      <div>
+        <p><a href="https://truhn.ai/">Lab for Artificial Intelligence in Medicine</a></p>
+        <p><a href="https://www.ukaachen.de/kliniken-institute/klinik-fuer-diagnostische-und-interventionelle-radiologie/klinik/">Department of Diagnostic and Interventional Radiology</a>, University Hospital RWTH Aachen</p>
+      </div>
+      <div>
+        <p>The approach is inspired by <a href="https://tml.stanford.edu/homebody/">HomeBody</a> (Stanford). We use
+          slam_toolbox, Open3D, Ultralytics YOLOE and Qwen.</p>
+        <p>The code is released under the MIT license. The object detector it uses, Ultralytics YOLOE, is licensed under
+          AGPL-3.0.</p>
+        <p>This page sets no cookies and loads no external resources.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="assets/js/site.js"></script>
 </body>
 </html>

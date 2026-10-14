@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- The 3D room at a fixed size for tools/capture_orbit.mjs (not linked from the page). -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Room capture</title>
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <script type="importmap">
+    { "imports": { "three": "../assets/vendor/three/three.module.min.js",
+                   "three/addons/controls/OrbitControls.js": "../assets/vendor/three/OrbitControls.js" } }
+  </script>
+  <style>
+    body { margin: 0; background: #fff; }
+    .room { width: var(--w, 1280px); height: var(--h, 720px); min-height: 0; border-radius: 0; box-shadow: none; outline: 0;
+            background: radial-gradient(120% 90% at 50% 0%, #ffffff 0%, #eef2f8 100%); }
+    .room .ui, .room .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="float room" id="roomView">
+    <div class="tags" id="roomTags"></div>
+    <div class="ui"><div class="seg"><span class="pill"></span><button data-mode="0"></button><button data-mode="1"></button></div></div>
+    <div class="info" id="roomInfo" hidden><h3><i></i><span></span></h3><p></p></div>
+  </div>
+  <script type="module">
+    import { initRoom } from '../assets/js/room3d.js';
+    const q = new URLSearchParams(location.search);
+    const host = document.getElementById('roomView');
+    host.style.setProperty('--w', `${q.get('w') || 1280}px`);
+    host.style.setProperty('--h', `${q.get('h') || 720}px`);
+    initRoom(host, { capture: true, base: '../' }).then(() => { window.__ready = true; });
+  </script>
+</body>
+</html>
