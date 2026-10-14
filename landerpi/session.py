@@ -57,7 +57,7 @@ def correct_rgb_time(frames, offset):
     """Turns each colour camera pose to the moment the image really shows: offset seconds from its
     timestamp, at the robot's turn rate there (from the neighbouring keyframes). Yaw only; the robot
     moves < 2 cm in 0.1 s. The colour images are ~0.1 s late against depth and poses
-    (projects/scene_understanding/notes/camera_time_offset.md, 2026-10-06)."""
+    (measured with projects/scene_understanding/check_camera_timing.py, 2026-10-06)."""
     def yaw(T):
         return np.arctan2(T[1, 0], T[0, 0])
     rates = []

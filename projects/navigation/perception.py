@@ -56,7 +56,7 @@ def depth_to_map(depth_mm, K, T_map_cam):
 def mask_points(mask, depth_mm, K_depth, T_map_depth, K_rgb, T_map_rgb):
     """The depth points that fall into a colour-image mask (HxW bool), in the map frame. Each camera with
     its own pose at its own time: the colour images are ~0.1 s late against depth
-    (scene_understanding/notes/camera_time_offset.md), the poses of both come from their own stamps."""
+    (measured with scene_understanding/check_camera_timing.py), the poses of both come from their own stamps."""
     pts = depth_to_map(depth_mm, K_depth, T_map_depth)
     if not len(pts):
         return pts

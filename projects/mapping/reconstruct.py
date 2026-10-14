@@ -40,8 +40,7 @@ RGB_FRAME = "rgb_camera_link"
 # understanding side (2026-10-06): best fit -0.09 to -0.12 s in 20261005_142856 and _160227, with
 # projects/scene_understanding/check_camera_timing.py (depth edges on colour edges while turning).
 # Depth and poses fit at every turn rate. Uncorrected, at 30 deg/s the colour was ~3 deg (~20 px) off
-# and one wall outlet became two objects 19 cm apart. Notes: projects/scene_understanding/notes/
-# camera_time_offset.md
+# and one wall outlet became two objects 19 cm apart.
 RGB_TIME_OFFSET = -0.10
 BASE_FRAME = "base_footprint"
 

@@ -8,8 +8,9 @@ turn rate x dt for a range of dt, and the script scores how close the depth imag
 (projected into the colour image) fall to the colour image's edges. The best dt is the offset:
 negative = the colour image shows the scene dt seconds before its timestamp.
 
-Background: projects/scene_understanding/notes/camera_time_offset.md (2026-10-06: about -0.1 s in
-20261005_142856 and 20261005_160227).
+Result 2026-10-06: about -0.1 s in 20261005_142856 and 20261005_160227 (the camera driver stamps the colour
+images when it publishes them, not at exposure); corrected since in projects/mapping/reconstruct.py
+(RGB_TIME_OFFSET).
 """
 
 import argparse
