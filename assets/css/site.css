@@ -89,30 +89,27 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent);
   background: var(--accent-soft); padding: 6px 12px; border-radius: 999px;
 }
+/* one line of title, as on a paper: the name in bold, the rest lighter */
 .hero h1 {
-  margin: 22px auto 14px;
-  font-size: clamp(46px, 8.4vw, 104px); line-height: 1.0; letter-spacing: -.045em; font-weight: 760;
+  max-width: 980px; margin: 22px auto 14px; text-wrap: balance;
+  font-size: clamp(30px, 4.2vw, 50px); line-height: 1.15; letter-spacing: -.03em; font-weight: 560; color: var(--ink-2);
 }
-.hero h1 .w { display: inline-block; }
+.hero h1 .name { font-weight: 780; color: var(--ink); }
 .hero h1 .act {
   background: linear-gradient(100deg, var(--accent) 10%, var(--accent-2) 90%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.tagline { margin: 0 auto; max-width: 760px; text-wrap: balance; font-size: clamp(19px, 2.3vw, 23px); line-height: 1.45; color: var(--ink-2); }
 .authors { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 28px; margin: 24px 0 0; font-size: 18px; font-weight: 600; color: var(--ink); }
 .byline { margin: 6px 0 0; font-size: 15px; color: var(--muted); }
 .byline a { color: var(--ink-2); }
 
-/* intro animation of the title words */
+/* intro animation of the header */
 @media (prefers-reduced-motion: no-preference) {
-  .hero h1 .w, .hero .tagline, .hero .authors, .hero .byline {
+  .hero h1, .hero .authors, .hero .byline {
     animation: rise .9s cubic-bezier(.2, .7, .2, 1) both;
   }
-  .hero h1 .w:nth-child(2) { animation-delay: .08s; }
-  .hero h1 .w:nth-child(3) { animation-delay: .16s; }
-  .hero .tagline { animation-delay: .26s; }
-  .hero .authors { animation-delay: .32s; }
-  .hero .byline { animation-delay: .36s; }
+  .hero .authors { animation-delay: .1s; }
+  .hero .byline { animation-delay: .16s; }
 }
 @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 
