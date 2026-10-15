@@ -2,8 +2,6 @@
 
 # Scan, Label, Act: A first step towards robots that assist medical staff
 
-A robot that scans a room and then works in it
-
 **Dennis Eschweiler** &nbsp;·&nbsp; **Daniel Truhn**
 
 Lab for Artificial Intelligence in Medicine,
