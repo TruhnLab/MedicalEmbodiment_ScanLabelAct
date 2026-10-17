@@ -238,14 +238,45 @@ h2.small { font-size: 22px; letter-spacing: -.01em; margin: 0 0 10px; text-align
 
 /* ---------- demos ---------- */
 .tabs { display: flex; justify-content: center; margin-bottom: 26px; }
-.demo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+/* a demo: the video, its conversation beside it, the explanation below */
+.demo { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 20px 22px; align-items: start; }
 .demo[hidden] { display: none; }
-.ask { display: flex; justify-content: center; }
-.bubble {
-  position: relative; max-width: 620px; padding: 14px 20px; border-radius: 20px 20px 20px 6px;
-  background: var(--card); box-shadow: var(--shadow); font-size: clamp(17px, 2vw, 20px); font-weight: 520; line-height: 1.4;
+.demo > .float { grid-column: 1; }
+/* the chat window takes the video's height and scrolls inside (the row's height comes from the video) */
+.demo > .chatbox { grid-column: 2; grid-row: 1; align-self: stretch; position: relative; min-height: 260px; }
+.chatbox .chat { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: thin; padding: 12px 12px 10px;
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); outline: 1px solid rgba(14, 22, 38, .04); }
+.demo > .outcome { grid-column: 1 / -1; }
+.chat { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; line-height: 1.4; }
+.chat .msg { margin: 0; padding: 7px 11px 8px; border-radius: 13px; max-width: 92%; }
+.chat .msg .who { display: block; margin-bottom: 1px; font-size: 10.5px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
+.chat .user { align-self: flex-end; background: var(--accent-soft); border-bottom-right-radius: 4px; color: var(--ink); }
+.chat .user .who { color: var(--accent); }
+.chat .robot { align-self: flex-start; background: #f1f3f7; border-bottom-left-radius: 4px; color: var(--ink-2); }
+.chat .robot .who { color: var(--ok); }
+.chat .act { margin: 0; display: flex; flex-wrap: wrap; gap: 4px; padding-left: 4px; }
+.chat .act code { font: 600 11.5px/1 ui-monospace, "Cascadia Mono", Menlo, monospace; color: var(--muted);
+  background: rgba(14, 22, 38, .05); padding: 4px 6px; border-radius: 5px; }
+.chat .earlier { display: flex; flex-direction: column; gap: 6px; opacity: .62; font-size: 13px; }
+.chat-head { margin: 0; font-size: 11px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.chat-head.now { margin-top: 6px; color: var(--accent); }
+.chat-src { margin: 16px 0 0; }
+/* the chat replays with its video (on wide screens; on narrow ones all of it shows, so the page does not jump) */
+@media (min-width: 901px) {
+  .chat [data-t]:not(.shown) { display: none; }
+  .chat .shown { animation: chatin .35s ease both; }
 }
-.bubble .who { display: block; font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+@keyframes chatin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.vclock { position: absolute; left: 14px; top: 14px; font-size: 13px; font-weight: 600; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; background: rgba(255, 255, 255, .88); padding: 5px 10px; border-radius: 8px;
+  box-shadow: 0 2px 8px -4px rgba(14, 22, 38, .3); pointer-events: none; }
+.vclock em { font-style: normal; color: var(--accent); }
+@media (max-width: 900px) {
+  .demo { grid-template-columns: 1fr; }
+  .demo > .float, .demo > .chatbox { grid-column: 1; }
+  .demo > .chatbox { grid-row: auto; min-height: 0; }
+  .chatbox .chat { position: static; overflow: visible; }
+}
 .outcome { margin: 0 auto; max-width: 760px; font-size: 15px; line-height: 1.65; color: var(--ink-2); text-align: justify; hyphens: manual; }
 .outcome code { font: 600 13px/1 ui-monospace, "Cascadia Mono", Menlo, monospace; color: var(--accent); background: var(--accent-soft); padding: 2px 6px; border-radius: 5px; white-space: nowrap; }
 @media (max-width: 640px) { .outcome { text-align: left; } }

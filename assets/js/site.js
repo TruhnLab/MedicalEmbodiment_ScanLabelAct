@@ -59,6 +59,37 @@ if (teaser && chapters.length) {
   chapters.forEach((b, i) => b.addEventListener('click', () => { teaser.currentTime = starts[i] + 0.01; teaser.play().catch(() => {}); }));
 }
 
+// ---------- task demos: the chat replays with its video, the clock gives the time since the request ----------
+// data-t on a message or a skill call: the second of the video it happened at; data-clock: sections of the video as
+// [video s, s since the request, speed]
+function syncDemo(panel) {
+  const v = $('video', panel), chat = $('.chatbox .chat', panel), clock = $('.vclock', panel);
+  if (!v || !chat) return;
+  const items = $$('[data-t]', chat);
+  const sections = clock ? JSON.parse(clock.dataset.clock) : [];
+  const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  let shown = -1;
+  const update = () => {
+    const t = v.currentTime;
+    let n = 0;
+    for (const it of items) {
+      const on = t >= +it.dataset.t;
+      it.classList.toggle('shown', on);
+      n += on;
+    }
+    if (n !== shown) { shown = n; chat.scrollTop = chat.scrollHeight; }
+    if (clock && sections.length) {
+      let s = sections[0];
+      for (const x of sections) if (x[0] <= t) s = x;
+      const since = s[1] + Math.max(0, t - s[0]) * s[2];
+      clock.innerHTML = `${mmss(since)} since the request${s[2] ? `<em> \u00b7 \u00d7${s[2]}</em>` : ''}`;
+    }
+  };
+  ['timeupdate', 'seeked', 'loadedmetadata'].forEach((e) => v.addEventListener(e, update));
+  update();
+}
+$$('.demo').forEach(syncDemo);
+
 // ---------- demo tabs ----------
 const tabs = $('#demoTabs');
 if (tabs) {

@@ -12,7 +12,7 @@
   <meta property="og:image" content="assets/media/teaser.jpg">
   <link rel="icon" href="assets/media/lab-logo.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/css/site.css?v=8">
+  <link rel="stylesheet" href="assets/css/site.css?v=14">
   <script type="importmap">
     { "imports": { "three": "./assets/vendor/three/three.module.min.js",
                    "three/addons/controls/OrbitControls.js": "./assets/vendor/three/OrbitControls.js" } }
@@ -220,8 +220,9 @@
     <section id="tasks" class="wide">
       <div class="head center narrow reveal">
         <h2>Language-instructed tasks</h2>
-        <p class="explain">A vision-language model receives the instruction together with the room's object list, its
-          walls and the robot's status. It plans the task and calls the robot's skills as tools, such as driving to an
+        <p class="explain">People give the robot its tasks in a chat. It answers, asks back when something is missing
+          and acts in the room. A vision-language model receives each instruction together with the room's object list,
+          its walls and the robot's status. It plans the task and calls the robot's skills as tools, such as driving to an
           object, watching for an item with the live detector, searching an area, or picking up a small object with the
           camera on the gripper. Each skill reports its result, so the model can decide on the next step. All runs are
           autonomous after the instruction.</p>
@@ -235,9 +236,16 @@
         </div>
       </div>
       <div class="demo" id="demo-find" role="tabpanel">
-        <div class="ask"><p class="bubble"><span class="who">Instruction</span>There is a cup left of the outlet. Please find and approach it.</p></div>
         <div class="float settle"><video src="assets/media/find.mp4" poster="assets/media/find.jpg" controls muted loop playsinline preload="metadata"
-             aria-label="The robot drives towards the power outlet, detects the cup on the way and stops in front of it"></video></div>
+             aria-label="The robot drives towards the power outlet, detects the cup on the way and stops in front of it"></video><span class="vclock" data-clock="[[0.03,0.0,0.0],[1.03,0.07,2.0],[17.03,32.05,1.5],[17.07,32.05,0.0]]"></span></div>
+        <div class="chatbox"><div class="chat" aria-label="The conversation of this run" tabindex="0">
+          <p class="msg user" data-t="0"><span class="who">User</span>There is a cup left of the outlet. Please find and approach it</p>
+          <p class="msg robot" data-t="1.5"><span class="who">Robot</span>I'll start looking for the cup with the camera, then drive toward the outlet area.</p>
+          <p class="act" data-t="1.63"><code>watch_for</code><code>drive_to_object</code></p>
+          <p class="msg robot" data-t="7.9"><span class="who">Robot</span>The cup was spotted on the way, left of the outlet as you said. Approaching it now.</p>
+          <p class="act" data-t="7.9"><code>approach_found</code></p>
+          <p class="msg robot" data-t="16.8"><span class="who">Robot</span>Done. The cup was found just left of the power outlet, and the robot is now stopped about 20&nbsp;cm in front of it, facing it with the camera on it.</p>
+        </div></div>
         <p class="outcome">The model first calls <code>watch_for</code>, which runs YOLOE on the live camera images with
           the word cup and a few synonyms. It then sends the robot towards the power outlet, a target from the room's
           object list, with <code>drive_to_object</code>. YOLOE spots the cup on the way, its depth places it in the room,
@@ -245,9 +253,25 @@
           front of it, 31&nbsp;s after the instruction. The video runs at twice the speed.</p>
       </div>
       <div class="demo" id="demo-pick" role="tabpanel" hidden>
-        <div class="ask"><p class="bubble"><span class="who">Instruction</span>I moved it a bit. Please pick it up again.</p></div>
         <div class="float"><video src="assets/media/pick.mp4" poster="assets/media/pick.jpg" controls muted loop playsinline preload="none"
-             aria-label="The robot detects a red cube, approaches it, centres the gripper over it and lifts it"></video></div>
+             aria-label="The robot detects a red cube, approaches it, centres the gripper over it and lifts it"></video><span class="vclock" data-clock="[[0.03,0.0,0.0],[1.53,0.07,2.0],[17.07,31.27,6.0],[22.37,62.9,1.0],[26.0,66.5,0.0]]"></span></div>
+        <div class="chatbox"><div class="chat" aria-label="The conversation of this run" tabindex="0">
+          <div class="earlier">
+            <p class="chat-head">Earlier in this chat</p>
+            <p class="msg user"><span class="who">User</span>See the small red cube in front of you? Please pick it up</p>
+            <p class="act"><code>watch_for</code><code>search_here</code><code>approach_found</code><code>pick_up_object</code></p>
+            <p class="msg robot"><span class="who">Robot</span>Found and picked up the small red cube (~29&nbsp;mm), just in front of you. Where should I put it down?</p>
+            <p class="msg user"><span class="who">User</span>Now place it down a few centimeters behind you please</p>
+            <p class="act"><code>turn_by_degrees</code><code>put_down_object</code></p>
+            <p class="msg robot"><span class="who">Robot</span>Done. I turned around and set the red cube down a few centimetres behind where it stood.</p>
+          </div>
+          <p class="chat-head now">In the video</p>
+          <p class="msg user" data-t="0"><span class="who">User</span>I moved it a bit. Please pick it up again</p>
+          <p class="act" data-t="2.53"><code>watch_for</code><code>search_here</code></p>
+          <p class="act" data-t="4.03"><code>approach_found</code></p>
+          <p class="act" data-t="9.03"><code>pick_up_object</code></p>
+          <p class="msg robot" data-t="25.5"><span class="who">Robot</span>Picked it up again, you had moved it a bit to the robot's left of where it was before. Where to next?</p>
+        </div></div>
         <p class="outcome">The model calls <code>watch_for</code> and <code>search_here</code>. YOLOE finds the cube in the
           camera images, an image check with Qwen confirms that it is the requested item, and <code>approach_found</code>
           drives the robot up to it. <code>pick_up_object</code> then steers by the camera on the gripper. Since camera
@@ -255,6 +279,7 @@
           in the image. Base and arm move until it sits there, then the arm goes down in guarded steps, closes the
           gripper and lifts the 30&nbsp;mm cube, 66&nbsp;s after the instruction.</p>
       </div>
+      <p class="note center chat-src">The chat messages are quoted from the runs' logs, shortened by leaving out positions.</p>
     </section>
 
     <!-- ======================= platform ======================= -->
@@ -288,6 +313,6 @@
     </div>
   </footer>
 
-  <script type="module" src="assets/js/site.js?v=3"></script>
+  <script type="module" src="assets/js/site.js?v=5"></script>
 </body>
 </html>
